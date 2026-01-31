@@ -2,7 +2,7 @@
 
 ## 🧠 Contexte du projet
 
-Ce projet technique a pour objectif de **dématérialiser la gestion des emprunts et des restitutions de livres** dans les classes d’écoles primaires.
+Ce projet technique a pour objectif de **dématérialiser la gestion des emprunts et des restitutions de livres** dans les classes d’écoles.
 
 Aujourd’hui, ces processus sont souvent réalisés manuellement, ce qui engendre une perte de temps pour les enseignants. L’application **Tech-App** vise à simplifier, automatiser et fiabiliser cette gestion grâce à une solution web moderne.
 
@@ -24,7 +24,7 @@ Aujourd’hui, ces processus sont souvent réalisés manuellement, ce qui engend
 
 ## 👤 Utilisateurs cibles
 
-* Enseignants du primaire
+* Enseignants
 * Intervenants dans une ou plusieurs écoles
 * Enseignants ayant plusieurs classes selon les jours
 

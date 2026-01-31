@@ -17,6 +17,11 @@ Aujourd’hui, ces processus sont souvent réalisés manuellement, ce qui engend
 
 ---
 
+## 🏗️ Architecture globale (Frontend / Backend / Database)
+![archi](images/architecture.png)
+
+---
+
 ## 👤 Utilisateurs cibles
 
 * Enseignants du primaire

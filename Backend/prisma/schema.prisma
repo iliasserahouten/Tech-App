@@ -1,0 +1,119 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/* ===== ENUMS ===== */
+
+enum JourSemaine {
+  LUNDI
+  MARDI
+  MERCREDI
+  JEUDI
+  VENDREDI
+  
+}
+
+/* ===== MODELS ===== */
+
+model Enseignant {
+  id       Int    @id @default(autoincrement())
+  nom      String
+  prenom   String
+  email    String @unique
+  password String
+
+  ecoles   EnseignantEcole[]
+}
+
+model Ecole {
+  id      Int    @id @default(autoincrement())
+  nom     String
+  adresse String
+
+  enseignants EnseignantEcole[]
+  classes      Classe[]
+}
+
+model EnseignantEcole {
+  enseignantId Int
+  ecoleId      Int
+
+  enseignant Enseignant @relation(fields: [enseignantId], references: [id])
+  ecole      Ecole      @relation(fields: [ecoleId], references: [id])
+
+  @@id([enseignantId, ecoleId])
+}
+
+model Classe {
+  id           Int         @id @default(autoincrement())
+  nom          String
+  niveau       String
+  jourSemaine  JourSemaine
+
+  ecoleId Int
+  ecole   Ecole @relation(fields: [ecoleId], references: [id])
+
+  eleves  Eleve[]
+
+  @@index([ecoleId])
+}
+
+model Eleve {
+  id     Int    @id @default(autoincrement())
+  nom    String
+  prenom String
+
+  classeId Int
+  classe   Classe @relation(fields: [classeId], references: [id])
+
+  emprunts     Emprunt[]
+  reservations Reservation[]
+
+  @@index([classeId])
+}
+
+model Livre {
+  id      Int    @id @default(autoincrement())
+  titre   String
+  univers String
+  auteur  String
+  qrCode  String @unique
+
+  emprunts     Emprunt[]
+  reservations Reservation[]
+}
+
+model Emprunt {
+  id                    Int      @id @default(autoincrement())
+  dateEmprunt           DateTime @default(now())
+  dateRetourPrevue      DateTime
+  dateRetourEffective   DateTime?
+
+  eleveId Int
+  livreId Int
+
+  eleve Eleve @relation(fields: [eleveId], references: [id])
+  livre Livre @relation(fields: [livreId], references: [id])
+
+  @@index([eleveId])
+  @@index([livreId])
+}
+
+model Reservation {
+  id              Int      @id @default(autoincrement())
+  dateReservation DateTime @default(now())
+
+  eleveId Int
+  livreId Int
+
+  eleve Eleve @relation(fields: [eleveId], references: [id])
+  livre Livre @relation(fields: [livreId], references: [id])
+
+  @@index([eleveId])
+  @@index([livreId])
+}

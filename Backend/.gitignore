@@ -48,3 +48,5 @@ dist/
 .env.*
 npm-debug.log*
 .vscode/
+
+/src/generated/prisma

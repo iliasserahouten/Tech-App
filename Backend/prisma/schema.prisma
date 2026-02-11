@@ -4,116 +4,175 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
-/* ===== ENUMS ===== */
-
-enum JourSemaine {
-  LUNDI
-  MARDI
-  MERCREDI
-  JEUDI
-  VENDREDI
-  
+enum DayOfWeek {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
 }
 
-/* ===== MODELS ===== */
-
-model Enseignant {
-  id       Int    @id @default(autoincrement())
-  nom      String
-  prenom   String
-  email    String @unique
-  password String
-
-  ecoles   EnseignantEcole[]
+enum BookStatus {
+  AVAILABLE
+  LOANED
+  RESERVED
 }
 
-model Ecole {
-  id      Int    @id @default(autoincrement())
-  nom     String
-  adresse String
-
-  enseignants EnseignantEcole[]
-  classes      Classe[]
+enum LoanStatus {
+  ACTIVE
+  RETURNED
+  LATE
 }
 
-model EnseignantEcole {
-  enseignantId Int
-  ecoleId      Int
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  firstName    String?
+  lastName     String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  enseignant Enseignant @relation(fields: [enseignantId], references: [id])
-  ecole      Ecole      @relation(fields: [ecoleId], references: [id])
-
-  @@id([enseignantId, ecoleId])
-}
-
-model Classe {
-  id           Int         @id @default(autoincrement())
-  nom          String
-  niveau       String
-  jourSemaine  JourSemaine
-
-  ecoleId Int
-  ecole   Ecole @relation(fields: [ecoleId], references: [id])
-
-  eleves  Eleve[]
-
-  @@index([ecoleId])
-}
-
-model Eleve {
-  id     Int    @id @default(autoincrement())
-  nom    String
-  prenom String
-
-  classeId Int
-  classe   Classe @relation(fields: [classeId], references: [id])
-
-  emprunts     Emprunt[]
-  reservations Reservation[]
-
-  @@index([classeId])
-}
-
-model Livre {
-  id      Int    @id @default(autoincrement())
-  titre   String
-  univers String
-  auteur  String
-  qrCode  String @unique
-
-  emprunts     Emprunt[]
+  schools      School[]
+  classSchedule ClassSchedule[]
+  loans        Loan[]
   reservations Reservation[]
 }
 
-model Emprunt {
-  id                    Int      @id @default(autoincrement())
-  dateEmprunt           DateTime @default(now())
-  dateRetourPrevue      DateTime
-  dateRetourEffective   DateTime?
+model School {
+  id        String   @id @default(cuid())
+  name      String
+  city      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  eleveId Int
-  livreId Int
+  teacherId String
+  teacher   User     @relation(fields: [teacherId], references: [id], onDelete: Cascade)
 
-  eleve Eleve @relation(fields: [eleveId], references: [id])
-  livre Livre @relation(fields: [livreId], references: [id])
+  classrooms Classroom[]
 
-  @@index([eleveId])
-  @@index([livreId])
+  @@unique([teacherId, name])
+  @@index([teacherId])
+}
+
+model Classroom {
+  id        String   @id @default(cuid())
+  name      String
+  grade     String?  // ex: "CE1", "CM2" (optional)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  schoolId  String
+  school    School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  students  Student[]
+  books     Book[]
+  schedules ClassSchedule[]
+
+  @@unique([schoolId, name])
+  @@index([schoolId])
+}
+
+model Student {
+  id         String   @id @default(cuid())
+  firstName  String
+  lastName   String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  classroomId String
+  classroom   Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+
+  loans       Loan[]
+  reservations Reservation[]
+
+  @@unique([classroomId, firstName, lastName])
+  @@index([classroomId])
+}
+
+model Book {
+  id        String     @id @default(cuid())
+  title     String
+  universe  String?
+  publisher String?
+  status    BookStatus @default(AVAILABLE)
+
+  qrToken   String     @unique // what the QR code contains
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  classroomId String
+  classroom   Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+
+  loans        Loan[]
+  reservations Reservation[]
+
+  @@index([classroomId])
+  @@index([status])
+}
+
+model Loan {
+  id          String     @id @default(cuid())
+  status      LoanStatus @default(ACTIVE)
+  borrowedAt  DateTime   @default(now())
+  dueAt       DateTime?
+  returnedAt  DateTime?
+
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  bookId      String
+  book        Book       @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  studentId   String
+  student     Student    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  teacherId   String
+  teacher     User       @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+
+  @@index([bookId])
+  @@index([studentId])
+  @@index([teacherId])
+  @@index([status])
 }
 
 model Reservation {
-  id              Int      @id @default(autoincrement())
-  dateReservation DateTime @default(now())
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
 
-  eleveId Int
-  livreId Int
+  // Optional: desired date when student wants the book
+  desiredFrom DateTime?
 
-  eleve Eleve @relation(fields: [eleveId], references: [id])
-  livre Livre @relation(fields: [livreId], references: [id])
+  bookId      String
+  book        Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
 
-  @@index([eleveId])
-  @@index([livreId])
+  studentId   String
+  student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  teacherId   String
+  teacher     User     @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+
+  // Prevent duplicate reservations for the same book+student
+  @@unique([bookId, studentId])
+  @@index([teacherId])
+  @@index([bookId])
+}
+
+model ClassSchedule {
+  id          String    @id @default(cuid())
+  dayOfWeek   DayOfWeek
+
+  teacherId   String
+  teacher     User      @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+
+  classroomId String
+  classroom   Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+
+  // One default class per day per teacher
+  @@unique([teacherId, dayOfWeek])
+  @@index([classroomId])
 }

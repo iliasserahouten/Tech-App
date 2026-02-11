@@ -1,29 +1,36 @@
 {
-  "name": "backend",
-  "type": "module",
+  "name": "school-library-backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
   "scripts": {
-    "dev": "dotenv -e .env -- tsx watch src/server.ts",
+    "dev": "ts-node-dev --respawn --transpile-only src/app.ts",
     "build": "tsc",
-    "start": "node dist/server.js",
-
-    "prisma:generate": "dotenv -e .env -- prisma generate",
-    "migrate:dev": "dotenv -e .env -- prisma migrate dev",
-    "migrate:test": "dotenv -e .env.test -- prisma migrate dev",
-    "migrate:prod": "dotenv -e .env.production -- prisma migrate deploy",
-    "studio": "dotenv -e .env -- prisma studio"
+    "start": "node dist/app.js",
+    "prisma": "prisma"
   },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
   "dependencies": {
-    "@prisma/client": "6.19.2",
-    "dotenv": "^17.2.3",
-    "express": "^5.2.1"
+    "@prisma/adapter-pg": "^7.3.0",
+    "@prisma/client": "^7.3.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.2.4",
+    "express": "^5.2.1",
+    "pdfkit": "^0.17.2",
+    "pg": "^8.18.0",
+    "prisma": "^7.3.0",
+    "qrcode": "^1.5.4"
   },
   "devDependencies": {
-    "prisma": "6.19.2",
+    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
-    "@types/node": "^25.1.0",
-    "dotenv-cli": "^7.4.4",
+    "@types/node": "^25.2.1",
+    "@types/pdfkit": "^0.17.4",
+    "@types/pg": "^8.16.0",
+    "@types/qrcode": "^1.5.6",
     "ts-node-dev": "^2.0.0",
-    "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   }
 }

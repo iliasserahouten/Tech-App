@@ -1,0 +1,178 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum DayOfWeek {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+enum BookStatus {
+  AVAILABLE
+  LOANED
+  RESERVED
+}
+
+enum LoanStatus {
+  ACTIVE
+  RETURNED
+  LATE
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  firstName    String?
+  lastName     String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  schools      School[]
+  classSchedule ClassSchedule[]
+  loans        Loan[]
+  reservations Reservation[]
+}
+
+model School {
+  id        String   @id @default(cuid())
+  name      String
+  city      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  teacherId String
+  teacher   User     @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+
+  classrooms Classroom[]
+
+  @@unique([teacherId, name])
+  @@index([teacherId])
+}
+
+model Classroom {
+  id        String   @id @default(cuid())
+  name      String
+  grade     String?  // ex: "CE1", "CM2" (optional)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  schoolId  String
+  school    School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  students  Student[]
+  books     Book[]
+  schedules ClassSchedule[]
+
+  @@unique([schoolId, name])
+  @@index([schoolId])
+}
+
+model Student {
+  id         String   @id @default(cuid())
+  firstName  String
+  lastName   String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  classroomId String
+  classroom   Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+
+  loans       Loan[]
+  reservations Reservation[]
+
+  @@unique([classroomId, firstName, lastName])
+  @@index([classroomId])
+}
+
+model Book {
+  id        String     @id @default(cuid())
+  title     String
+  universe  String?
+  publisher String?
+  status    BookStatus @default(AVAILABLE)
+
+  qrToken   String     @unique // what the QR code contains
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  classroomId String
+  classroom   Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+
+  loans        Loan[]
+  reservations Reservation[]
+
+  @@index([classroomId])
+  @@index([status])
+}
+
+model Loan {
+  id          String     @id @default(cuid())
+  status      LoanStatus @default(ACTIVE)
+  borrowedAt  DateTime   @default(now())
+  dueAt       DateTime?
+  returnedAt  DateTime?
+
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  bookId      String
+  book        Book       @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  studentId   String
+  student     Student    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  teacherId   String
+  teacher     User       @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+
+  @@index([bookId])
+  @@index([studentId])
+  @@index([teacherId])
+  @@index([status])
+}
+
+model Reservation {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+
+  // Optional: desired date when student wants the book
+  desiredFrom DateTime?
+
+  bookId      String
+  book        Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  studentId   String
+  student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  teacherId   String
+  teacher     User     @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+
+  // Prevent duplicate reservations for the same book+student
+  @@unique([bookId, studentId])
+  @@index([teacherId])
+  @@index([bookId])
+}
+
+model ClassSchedule {
+  id          String    @id @default(cuid())
+  dayOfWeek   DayOfWeek
+
+  teacherId   String
+  teacher     User      @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+
+  classroomId String
+  classroom   Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+
+  // One default class per day per teacher
+  @@unique([teacherId, dayOfWeek])
+  @@index([classroomId])
+}

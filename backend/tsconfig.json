@@ -1,14 +1,3 @@
-// {
-//   "compilerOptions": {
-//     "target": "ES2020",
-//     "module": "CommonJS",
-//     "rootDir": "./src",
-//     "outDir": "./dist",
-//     "strict": true,
-//     "esModuleInterop": true
-//   }
-// }
-
 
 {
   "compilerOptions": {
@@ -17,16 +6,14 @@
     "moduleResolution": "NodeNext",
     "rootDir": "./src",
     "outDir": "./dist",
+    "typeRoots": ["./node_modules/@types", "./src/types"],
+    "types": ["node"],
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "verbatimModuleSyntax": false
   },
-  "include": ["src"],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "prisma",
-    "prisma.config.ts"
-  ]
+  "include": ["src", "prisma.config.ts"],
+  "exclude": ["node_modules", "dist", "prisma"]
 }
+

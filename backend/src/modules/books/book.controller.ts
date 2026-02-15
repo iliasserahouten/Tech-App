@@ -10,7 +10,7 @@ export class BookController {
   constructor(private service = new BookService()) {}
 
   private getTeacherId(req: Request): string {
-    const teacherId = req.header("x-teacher-id");
+    const teacherId = req.user!.id;
     if (!teacherId) throw new AppError("Missing x-teacher-id header", 401);
     return teacherId;
   }

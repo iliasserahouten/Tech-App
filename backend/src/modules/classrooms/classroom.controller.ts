@@ -14,6 +14,20 @@ export class ClassroomController {
     return teacherId;
   }
 
+  getMyClassrooms = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const teacherId = this.getTeacherId(req);
+      const data = await this.service.getMyClassrooms(teacherId);
+      return res.json(data);
+    } catch (err) {
+      return next(err);
+    }
+  };
+
   create = async (
     req: Request<SchoolParams, any, any>,
     res: Response,

@@ -21,6 +21,9 @@ import { ClassroomController } from "./classroom.controller";
 const router = Router();
 const controller = new ClassroomController();
 
+// Route pour récupérer toutes les classes de l'enseignant
+router.get("/classrooms/my-classrooms", controller.getMyClassrooms);
+
 // /api/schools/:schoolId/classrooms
 router.post("/:schoolId/classrooms", controller.create);
 router.get("/:schoolId/classrooms", controller.listBySchool);

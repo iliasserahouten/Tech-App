@@ -4,6 +4,7 @@ import { AppError } from "../errors/app-error";
 
 type JwtPayload = { sub: string; email: string };
 
+
 export function requireAuth(req: Request, _res: Response, next: NextFunction) {
   const header = req.header("authorization");
   if (!header?.startsWith("Bearer ")) {

@@ -35,6 +35,29 @@ export class ClassroomService {
     return classroom;
   }
 
+  async getMyClassrooms(teacherId: string) {
+    // Récupérer toutes les classes de l'enseignant via ses écoles
+    const schools = await prisma.school.findMany({
+      where: { teacherId },
+      include: {
+        classrooms: {
+          include: {
+            _count: {
+              select: {
+                students: true,
+                books: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // Aplatir toutes les classes
+    const classrooms = schools.flatMap(school => school.classrooms);
+    return classrooms.map(toDto);
+  }
+
   async createClassroom(teacherId: string, schoolId: string, dto: CreateClassroomDto) {
     if (!dto.name?.trim()) throw new AppError("name is required", 400);
 

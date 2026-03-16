@@ -28,19 +28,33 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   initAuth: () => {
-    const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('user');
-    
-    if (token && userData) {
-      try {
-        const user = JSON.parse(userData);
-        set({ user, token, isAuthenticated: true });
-      } catch (error) {
-        console.error('Erreur lors de la lecture des données utilisateur:', error);
+    try {
+      const token = localStorage.getItem('token');
+      const userData = localStorage.getItem('user');
+      
+      // Vérifier que les valeurs existent ET ne sont pas "undefined" (string)
+      if (token && token !== 'undefined' && userData && userData !== 'undefined') {
+        try {
+          const user = JSON.parse(userData);
+          set({ user, token, isAuthenticated: true });
+        } catch (parseError) {
+          console.error('Erreur de parsing du user:', parseError);
+          // Nettoyer les données corrompues
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          set({ user: null, token: null, isAuthenticated: false });
+        }
+      } else {
+        // Nettoyer les données invalides
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         set({ user: null, token: null, isAuthenticated: false });
       }
+    } catch (error) {
+      console.error('Erreur dans initAuth:', error);
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      set({ user: null, token: null, isAuthenticated: false });
     }
   },
 }));

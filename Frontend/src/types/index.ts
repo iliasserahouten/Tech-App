@@ -1,4 +1,4 @@
-// Types pour l'authentification
+// ==================== AUTH ====================
 export interface User {
   id: string;
   email: string;
@@ -18,12 +18,12 @@ export interface LoginCredentials {
   password: string;
 }
 
-// Enums
+// ==================== ENUMS ====================
+export type DayOfWeek = 'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY' | 'SUNDAY';
 export type BookStatus = 'AVAILABLE' | 'LOANED' | 'RESERVED';
 export type LoanStatus = 'ACTIVE' | 'RETURNED' | 'LATE';
-export type DayOfWeek = 'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY' | 'SUNDAY';
 
-// Types pour les écoles
+// ==================== SCHOOL ====================
 export interface School {
   id: string;
   name: string;
@@ -35,12 +35,7 @@ export interface School {
   classrooms?: Classroom[];
 }
 
-export interface CreateSchoolDto {
-  name: string;
-  city?: string;
-}
-
-// Types pour les classes
+// ==================== CLASSROOM ====================
 export interface Classroom {
   id: string;
   name: string;
@@ -51,15 +46,13 @@ export interface Classroom {
   school?: School;
   students?: Student[];
   books?: Book[];
+  _count?: {
+    students: number;
+    books: number;
+  };
 }
 
-export interface CreateClassroomDto {
-  name: string;
-  grade?: string;
-  schoolId: string;
-}
-
-// Types pour les étudiants
+// ==================== STUDENT ====================
 export interface Student {
   id: string;
   firstName: string;
@@ -68,17 +61,9 @@ export interface Student {
   createdAt: string;
   updatedAt: string;
   classroom?: Classroom;
-  loans?: Loan[];
-  reservations?: Reservation[];
 }
 
-export interface CreateStudentDto {
-  firstName: string;
-  lastName: string;
-  classroomId: string;
-}
-
-// Types pour les livres
+// ==================== BOOK ====================
 export interface Book {
   id: string;
   title: string;
@@ -91,17 +76,10 @@ export interface Book {
   updatedAt: string;
   classroom?: Classroom;
   loans?: Loan[];
-  reservations?: Reservation[];
+  currentLoan?: Loan;
 }
 
-export interface CreateBookDto {
-  title: string;
-  universe?: string;
-  publisher?: string;
-  classroomId: string;
-}
-
-// Types pour les emprunts
+// ==================== LOAN ====================
 export interface Loan {
   id: string;
   status: LoanStatus;
@@ -118,13 +96,7 @@ export interface Loan {
   teacher?: User;
 }
 
-export interface CreateLoanDto {
-  bookId: string;
-  studentId: string;
-  dueAt?: string;
-}
-
-// Types pour les réservations
+// ==================== RESERVATION ====================
 export interface Reservation {
   id: string;
   desiredFrom: string | null;
@@ -137,13 +109,7 @@ export interface Reservation {
   teacher?: User;
 }
 
-export interface CreateReservationDto {
-  bookId: string;
-  studentId: string;
-  desiredFrom?: string;
-}
-
-// Types pour l'emploi du temps
+// ==================== CLASS SCHEDULE ====================
 export interface ClassSchedule {
   id: string;
   dayOfWeek: DayOfWeek;
@@ -153,12 +119,29 @@ export interface ClassSchedule {
   classroom?: Classroom;
 }
 
-export interface CreateClassScheduleDto {
-  dayOfWeek: DayOfWeek;
-  classroomId: string;
+// ==================== RECENT ACTIVITY ====================
+export interface RecentActivity {
+  id: string;
+  type: 'borrow' | 'return';
+  studentName: string;
+  bookTitle: string;
+  timestamp: string;
+  student?: Student;
+  book?: Book;
 }
 
-// Types pour les réponses API
+// ==================== DASHBOARD STATS ====================
+export interface DashboardStats {
+  totalBorrowed: number;
+  totalOverdue: number;
+  totalAvailable: number;
+  totalBooks: number;
+  totalStudents: number;
+  activeLoans: Loan[];
+  recentActivities: RecentActivity[];
+}
+
+// ==================== API RESPONSES ====================
 export interface ApiResponse<T> {
   data: T;
   message?: string;
@@ -170,39 +153,4 @@ export interface PaginatedResponse<T> {
   page: number;
   limit: number;
   totalPages: number;
-}
-
-// Types pour les filtres et pagination
-export interface PaginationParams {
-  page?: number;
-  limit?: number;
-  search?: string;
-  sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
-}
-
-export interface BookFilters extends PaginationParams {
-  status?: BookStatus;
-  classroomId?: string;
-}
-
-export interface LoanFilters extends PaginationParams {
-  status?: LoanStatus;
-  studentId?: string;
-  bookId?: string;
-  teacherId?: string;
-}
-
-// Types pour les statistiques
-export interface LibraryStats {
-  totalBooks: number;
-  totalStudents: number;
-  totalSchools: number;
-  totalClassrooms: number;
-  activeLoans: number;
-  lateLoans: number;
-  availableBooks: number;
-  loanedBooks: number;
-  reservedBooks: number;
-  totalReservations: number;
 }

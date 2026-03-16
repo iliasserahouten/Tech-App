@@ -7,7 +7,8 @@ export class AuthController {
   register = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const data = await this.service.register(req.body);
-      return res.status(201).json({ data });
+      // Retourner directement sans wrapper "data"
+      return res.status(201).json(data);
     } catch (e) {
       return next(e);
     }
@@ -16,7 +17,8 @@ export class AuthController {
   login = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const data = await this.service.login(req.body);
-      return res.json({ data });
+      // Retourner directement sans wrapper "data"
+      return res.json(data);
     } catch (e) {
       return next(e);
     }
@@ -26,7 +28,8 @@ export class AuthController {
     try {
       const userId = req.user!.id;
       const data = await this.service.me(userId);
-      return res.json({ data });
+      // Retourner directement sans wrapper "data"
+      return res.json(data);
     } catch (e) {
       return next(e);
     }

@@ -1,12 +1,12 @@
-import React from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
-import { BookOpen, LogOut, Home, Users, BookMarked } from 'lucide-react';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { BookOpen, LogOut, Home, Library, ScanLine, Settings } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import toast from 'react-hot-toast';
 import styles from './Layout.module.css';
 
 export default function Layout() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, logout } = useAuthStore();
 
   const handleLogout = () => {
@@ -15,59 +15,63 @@ export default function Layout() {
     navigate('/login');
   };
 
+  const navItems = [
+    { path: '/dashboard', label: 'Tableau de bord', icon: Home },
+    { path: '/library', label: 'Livres', icon: Library },
+    { path: '/scan', label: 'Scan', icon: ScanLine },
+    { path: '/students', label: 'Étudiants', icon: Settings },
+  ];
+
   return (
     <div className={styles.layoutContainer}>
-      {/* Sidebar */}
-      <aside className={styles.sidebar}>
-        <div className={styles.sidebarHeader}>
-          <BookOpen className={styles.logo} />
-          <h1 className={styles.logoText}>Bibliothèque</h1>
-        </div>
-
-        <nav className={styles.navigation}>
-          <button
-            onClick={() => navigate('/dashboard')}
-            className={styles.navItem}
-          >
-            <Home size={20} />
-            <span>Tableau de bord</span>
-          </button>
-          <button
-            onClick={() => navigate('/books')}
-            className={styles.navItem}
-          >
-            <BookMarked size={20} />
-            <span>Livres</span>
-          </button>
-          <button
-            onClick={() => navigate('/students')}
-            className={styles.navItem}
-          >
-            <Users size={20} />
-            <span>Étudiants</span>
-          </button>
-        </nav>
-
-        <div className={styles.sidebarFooter}>
-          <div className={styles.userInfo}>
-            <div className={styles.userAvatar}>
-              {user?.firstName?.[0] || user?.email[0].toUpperCase()}
-            </div>
-            <div className={styles.userDetails}>
-              <p className={styles.userName}>
-                {user?.firstName && user?.lastName
-                  ? `${user.firstName} ${user.lastName}`
-                  : user?.email}
-              </p>
-              <p className={styles.userEmail}>{user?.email}</p>
-            </div>
+      {/* Header horizontal */}
+      <header className={styles.header}>
+        <div className={styles.headerContent}>
+          {/* Logo */}
+          <div className={styles.logoSection}>
+            <BookOpen className={styles.logoIcon} />
+            <span className={styles.logoText}>Bibliothèque</span>
           </div>
-          <button onClick={handleLogout} className={styles.logoutButton}>
-            <LogOut size={20} />
-            <span>Déconnexion</span>
-          </button>
+
+          {/* Navigation */}
+          <nav className={styles.navigation}>
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = location.pathname === item.path;
+              return (
+                <button
+                  key={item.path}
+                  onClick={() => navigate(item.path)}
+                  className={`${styles.navItem} ${isActive ? styles.navItemActive : ''}`}
+                >
+                  <Icon size={20} />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </nav>
+
+          {/* User section */}
+          <div className={styles.userSection}>
+            <div className={styles.userInfo}>
+              <div className={styles.userAvatar}>
+                {user?.firstName?.[0] || user?.email[0].toUpperCase()}
+              </div>
+              <div className={styles.userDetails}>
+                <span className={styles.userName}>
+                  {user?.firstName && user?.lastName
+                    ? `${user.firstName} ${user.lastName}`
+                    : user?.email}
+                </span>
+              </div>
+            </div>
+            <button onClick={handleLogout} className={styles.logoutButton}>
+              <LogOut size={20} />
+              <span>Déconnexion</span>
+            </button>
+          </div>
         </div>
-      </aside>
+      </header>
 
       {/* Main content */}
       <main className={styles.mainContent}>

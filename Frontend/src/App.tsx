@@ -11,6 +11,9 @@ import Layout from './components/Layout/Layout';
 import LoginPage from './pages/LoginPage/LoginPage';
 import RegisterPage from './pages/RegisterPage/RegisterPage';
 import DashboardPage from './pages/DashboardPage/DashboardPage';
+import BooksPage from './pages/BooksPage/BooksPage';
+import ScanPage from './pages/ScanPage/ScanPage';
+import GestionPage from './pages/GestionPage/GestionPage';
 
 function App() {
   const { initAuth } = useAuthStore();
@@ -62,6 +65,9 @@ function App() {
         >
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard" element={<DashboardPage />} />
+          <Route path="books"     element={<BooksPage />} />
+          <Route path="scan"      element={<ScanPage />} />
+          <Route path="gestion"   element={<GestionPage />} />
         </Route>
 
         {/* Redirection par défaut */}

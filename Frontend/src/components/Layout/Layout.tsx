@@ -17,9 +17,9 @@ export default function Layout() {
 
   const navItems = [
     { path: '/dashboard', label: 'Tableau de bord', icon: Home },
-    { path: '/library', label: 'Livres', icon: Library },
-    { path: '/scan', label: 'Scan', icon: ScanLine },
-    { path: '/students', label: 'Étudiants', icon: Settings },
+    { path: '/books',     label: 'Livres',           icon: Library },
+    { path: '/scan',      label: 'Scan',             icon: ScanLine },
+    { path: '/gestion',   label: 'Gestion',          icon: Settings },
   ];
 
   return (

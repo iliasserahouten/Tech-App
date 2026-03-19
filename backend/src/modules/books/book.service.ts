@@ -4,7 +4,6 @@ import { BookRepository } from "./book.repository";
 import { CreateBookDto } from "./dto/create-book.dto";
 import { UpdateBookDto } from "./dto/update-book.dto";
 import { BookResponseDto } from "./dto/book-response.dto";
-import crypto from "crypto";
 
 function toDto(b: any): BookResponseDto {
   return {
@@ -47,17 +46,31 @@ export class BookService {
     return book;
   }
 
-  private generateQrToken(): string {
-    // short, unique enough, URL-safe
-    return crypto.randomBytes(16).toString("hex");
+  // Génère un token lisible : LIV-A3F2B1
+  private async generateQrToken(): Promise<string> {
+    let token: string;
+    let exists = true;
+    let attempts = 0;
+
+    do {
+      const suffix = Math.random().toString(36).substring(2, 8).toUpperCase();
+      token = `LIV-${suffix}`;
+      const existing = await prisma.book.findUnique({ where: { qrToken: token } });
+      exists = !!existing;
+      attempts++;
+    } while (exists && attempts < 10);
+
+    return token!;
   }
 
-  async createBook(teacherId: string, classroomId: string, dto: CreateBookDto) {
+  async createBook(teacherId: string, classroomId: string, dto: CreateBookDto & { qrToken?: string }) {
     if (!dto.title?.trim()) throw new AppError("title is required", 400);
 
     await this.ensureClassroomOwnership(teacherId, classroomId);
 
-    const qrToken = this.generateQrToken();
+    // Utiliser le qrToken fourni ou en générer un lisible automatiquement
+    const qrToken = dto.qrToken?.trim() || await this.generateQrToken();
+
     const created = await this.repo.create(classroomId, qrToken, {
       title: dto.title.trim(),
       universe: dto.universe,
@@ -66,6 +79,8 @@ export class BookService {
 
     return toDto(created);
   }
+
+  
 
   async listBooks(teacherId: string, classroomId: string) {
     await this.ensureClassroomOwnership(teacherId, classroomId);

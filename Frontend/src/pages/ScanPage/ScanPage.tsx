@@ -16,7 +16,6 @@ function addDays(days: number): string {
 // ── Phase 1 : Scanner ──
 function ScanFrame({ onScan }: { onScan: (code: string) => void }) {
   const [manual, setManual] = useState('');
-  const [loading, setLoading] = useState(false);
 
   const handleManual = (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,12 +30,9 @@ function ScanFrame({ onScan }: { onScan: (code: string) => void }) {
         <p>Scannez le QR code ou saisissez le code manuellement</p>
       </div>
 
-      {/* Viewfinder caméra */}
       <div className={styles.viewfinder}>
         <div className={styles.viewfinderInner}>
-          {loading
-            ? <Loader size={48} className={styles.spin} />
-            : <Camera size={48} className={styles.cameraIcon} />}
+          <Camera size={48} className={styles.cameraIcon} />
           <div className={styles.corner + ' ' + styles.cornerTL} />
           <div className={styles.corner + ' ' + styles.cornerTR} />
           <div className={styles.corner + ' ' + styles.cornerBL} />
@@ -46,7 +42,6 @@ function ScanFrame({ onScan }: { onScan: (code: string) => void }) {
         <p className={styles.viewfinderHint}>Positionnez le QR code dans le cadre</p>
       </div>
 
-      {/* Saisie manuelle */}
       <div className={styles.manualSection}>
         <p className={styles.manualLabel}>
           <Keyboard size={14} />
@@ -96,11 +91,16 @@ function EmpruntForm({
     setLoading(true);
     setError('');
     try {
-      await booksService.createLoan({ bookId: book.id, studentId, dueAt });
+      // Le backend attend qrToken et studentId
+      await booksService.createLoan({
+        qrToken: book.qrToken,
+        studentId,
+        dueAt,
+      });
       const student = students.find(s => s.id === studentId);
       onSuccess(`Emprunt enregistré pour ${student?.firstName} ${student?.lastName}`);
     } catch (err: any) {
-      setError(err.response?.data?.message ?? 'Erreur lors de l\'emprunt');
+      setError(err.response?.data?.error?.message ?? 'Erreur lors de l\'emprunt');
     } finally {
       setLoading(false);
     }
@@ -133,7 +133,9 @@ function EmpruntForm({
             <User size={14} /> Élève
           </label>
           {loadingStudents ? (
-            <div className={styles.loadingStudents}><Loader size={16} className={styles.spin} /> Chargement...</div>
+            <div className={styles.loadingStudents}>
+              <Loader size={16} className={styles.spin} /> Chargement...
+            </div>
           ) : students.length > 0 ? (
             <select
               value={studentId}
@@ -195,14 +197,14 @@ function RetourForm({
   const isLate = loan?.status === 'LATE';
 
   const handleConfirm = async () => {
-    if (!loan) return;
     setLoading(true);
     setError('');
     try {
-      await booksService.returnBook(loan.id);
+      // Le backend attend qrToken (pas loanId)
+      await booksService.returnBook(book.qrToken);
       onSuccess(`"${book.title}" est de retour en rayon`);
     } catch (err: any) {
-      setError(err.response?.data?.message ?? 'Erreur lors du retour');
+      setError(err.response?.data?.error?.message ?? 'Erreur lors du retour');
     } finally {
       setLoading(false);
     }
@@ -290,9 +292,9 @@ function SuccessScreen({ message, onReset }: { message: string; onReset: () => v
 type Phase = 'scan' | 'emprunt' | 'retour' | 'success';
 
 export default function ScanPage() {
-  const [phase, setPhase]     = useState<Phase>('scan');
-  const [book, setBook]       = useState<Book | null>(null);
-  const [loan, setLoan]       = useState<Loan | null>(null);
+  const [phase, setPhase]           = useState<Phase>('scan');
+  const [book, setBook]             = useState<Book | null>(null);
+  const [loan, setLoan]             = useState<Loan | null>(null);
   const [successMsg, setSuccessMsg] = useState('');
   const [scanError, setScanError]   = useState('');
   const [scanning, setScanning]     = useState(false);
@@ -304,7 +306,6 @@ export default function ScanPage() {
       const foundBook = await booksService.getBookByQrToken(qrToken);
       setBook(foundBook);
 
-      // Auto-Switch basé sur Book.status
       if (foundBook.status === 'AVAILABLE') {
         setPhase('emprunt');
       } else {

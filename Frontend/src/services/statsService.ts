@@ -1,14 +1,19 @@
 import api from '../lib/axios';
 import { DashboardStats } from '../types';
 
+function extract<T>(response: any): T {
+  return response.data?.data ?? response.data;
+}
+
 export const statsService = {
-  // Obtenir les statistiques du dashboard
+
+  // Stats globales
   async getDashboardStats(): Promise<DashboardStats> {
-    const response = await api.get<DashboardStats>('/stats/dashboard');
-    return response.data;
+    const response = await api.get('/stats/dashboard');
+    return extract<DashboardStats>(response);
   },
 
-  // Obtenir les statistiques d'une classe
+  // Stats par classe ← nouveau
   async getClassroomStats(classroomId: string): Promise<{
     totalBooks: number;
     totalStudents: number;
@@ -16,6 +21,6 @@ export const statsService = {
     overdueLoans: number;
   }> {
     const response = await api.get(`/stats/classroom/${classroomId}`);
-    return response.data;
+    return extract(response);
   },
 };

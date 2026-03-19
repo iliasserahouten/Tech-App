@@ -89,6 +89,14 @@
 .submitBtn:disabled { opacity: 0.6; cursor: not-allowed; }
 .errorMsg { background: #FEE2E2; color: #DC2626; padding: 10px 12px; border-radius: 8px; font-size: 0.85rem; margin-bottom: 12px; }
 
+
+.optional {
+  font-weight: 400;
+  color: #9CA3AF;
+  font-size: 0.75rem;
+  margin-left: 4px;
+}
+
 /* ── Responsive ── */
 @media (max-width: 640px) {
   .page { padding: 16px; }

@@ -11,51 +11,56 @@ import styles from './DashboardPage.module.css';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
-const { user } = useAuthStore();
+  const { user } = useAuthStore();
 
-const [currentClassroom, setCurrentClassroom] = useState<Classroom | null>(null);
-const [myClassrooms, setMyClassrooms] = useState<Classroom[]>([]);
-const [stats, setStats] = useState<DashboardStats | null>(null);
-const [isLoading, setIsLoading] = useState(true);
-const [hasError, setHasError] = useState(false);
+  const [currentClassroom, setCurrentClassroom] = useState<Classroom | null>(null);
+  const [myClassrooms, setMyClassrooms] = useState<Classroom[]>([]);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
 
-useEffect(() => {
-  if (!user) {
-    setIsLoading(false);
-    return;
-  }
+  // Chargement initial
+  useEffect(() => {
+    if (!user) {
+      setIsLoading(false);
+      return;
+    }
+    loadDashboardData();
+  }, [user]);
 
-  loadDashboardData();
-}, [user]);
+  // ← ICI : useEffect AVANT le return, pas après
+  // Recharger les KPIs quand la classe active change
+  useEffect(() => {
+    if (!currentClassroom) return;
+
+    statsService.getClassroomStats(currentClassroom.id)
+      .then(classStats => {
+        setStats(prev => prev ? {
+          ...prev,
+          totalBorrowed: classStats.activeLoans,
+          totalOverdue: classStats.overdueLoans,
+          totalAvailable: classStats.totalBooks - classStats.activeLoans - classStats.overdueLoans,
+        } : prev);
+      })
+      .catch(() => {});
+  }, [currentClassroom]);
+
   const loadDashboardData = async () => {
     setIsLoading(true);
     setHasError(false);
-    
+
     try {
-      // Essayer de charger les classes
-      try {
-        const classrooms = await classroomsService.getMyClassrooms();
-        setMyClassrooms(classrooms);
+      const classrooms = await classroomsService.getMyClassrooms();
+      setMyClassrooms(classrooms);
 
-        // Essayer de charger la classe du jour
-        try {
-          const todayClassroom = await classroomsService.getTodayClassroom();
-          setCurrentClassroom(todayClassroom || (classrooms.length > 0 ? classrooms[0] : null));
-        } catch (err) {
-          // Si l'endpoint n'existe pas, prendre la première classe
-          setCurrentClassroom(classrooms.length > 0 ? classrooms[0] : null);
-        }
-      } catch (err) {
-        console.log('Les classes ne sont pas encore disponibles');
-      }
+      const todayClassroom = await classroomsService.getTodayClassroom();
+      const active = todayClassroom || (classrooms.length > 0 ? classrooms[0] : null);
+      setCurrentClassroom(active);
 
-      // Essayer de charger les stats
       try {
         const dashboardStats = await statsService.getDashboardStats();
         setStats(dashboardStats);
-      } catch (err) {
-        console.log('Les statistiques ne sont pas encore disponibles');
-        // Utiliser des stats par défaut
+      } catch {
         setStats({
           totalBorrowed: 0,
           totalOverdue: 0,
@@ -66,20 +71,9 @@ useEffect(() => {
           recentActivities: [],
         });
       }
-    } catch (error: any) {
-      console.error('Erreur chargement dashboard:', error);
+
+    } catch (error) {
       setHasError(true);
-      
-      // Utiliser des données par défaut
-      setStats({
-        totalBorrowed: 0,
-        totalOverdue: 0,
-        totalAvailable: 0,
-        totalBooks: 0,
-        totalStudents: 0,
-        activeLoans: [],
-        recentActivities: [],
-      });
     } finally {
       setIsLoading(false);
     }
@@ -87,9 +81,7 @@ useEffect(() => {
 
   const handleClassroomChange = (classroomId: string) => {
     const classroom = myClassrooms.find(c => c.id === classroomId);
-    if (classroom) {
-      setCurrentClassroom(classroom);
-    }
+    if (classroom) setCurrentClassroom(classroom);
   };
 
   const StatCard = ({
@@ -127,13 +119,13 @@ useEffect(() => {
 
   return (
     <div className={styles.dashboard}>
-      {/* En-tête avec info utilisateur */}
+      {/* En-tête */}
       <div className={styles.header}>
         <div className={styles.userGreeting}>
           <h1 className={styles.title}>
             Bonjour, {user?.firstName || 'Enseignant'} {user?.lastName || ''}
           </h1>
-          
+
           {myClassrooms.length > 0 ? (
             <div className={styles.classroomSelector}>
               <label htmlFor="classroom-select" className={styles.classroomLabel}>
@@ -160,7 +152,7 @@ useEffect(() => {
         </div>
       </div>
 
-      {/* KPIs - Statistiques */}
+      {/* KPIs */}
       {stats && (
         <div className={styles.kpiSection}>
           <h2 className={styles.sectionTitle}>Les KPIs :</h2>
@@ -246,7 +238,7 @@ useEffect(() => {
         </div>
       </div>
 
-      {/* Message si API pas prête */}
+      {/* Message erreur */}
       {hasError && (
         <div className={styles.infoBox}>
           <AlertCircle size={20} />

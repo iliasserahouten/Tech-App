@@ -59,7 +59,13 @@ function AddBookModal({
   onClose: () => void;
   onAdd: (book: Book) => void;
 }) {
-  const [form, setForm] = useState({ title: '', universe: '', publisher: '', classroomId: classrooms[0]?.id ?? '' });
+  const [form, setForm] = useState({
+    title: '',
+    universe: '',
+    publisher: '',
+    classroomId: classrooms[0]?.id ?? '',
+    qrToken: '',
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -74,6 +80,7 @@ function AddBookModal({
         universe: form.universe || undefined,
         publisher: form.publisher || undefined,
         classroomId: form.classroomId,
+        qrToken: form.qrToken || undefined,
       });
       onAdd(newBook);
       onClose();
@@ -95,23 +102,47 @@ function AddBookModal({
         <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.formGroup}>
             <label>Titre *</label>
-            <input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} required />
+            <input
+              value={form.title}
+              onChange={e => setForm({ ...form, title: e.target.value })}
+              required
+            />
           </div>
           <div className={styles.formGroup}>
             <label>Univers / Série</label>
-            <input value={form.universe} onChange={e => setForm({ ...form, universe: e.target.value })} />
+            <input
+              value={form.universe}
+              onChange={e => setForm({ ...form, universe: e.target.value })}
+            />
           </div>
           <div className={styles.formGroup}>
             <label>Éditeur</label>
-            <input value={form.publisher} onChange={e => setForm({ ...form, publisher: e.target.value })} />
+            <input
+              value={form.publisher}
+              onChange={e => setForm({ ...form, publisher: e.target.value })}
+            />
           </div>
           <div className={styles.formGroup}>
             <label>Classe *</label>
-            <select value={form.classroomId} onChange={e => setForm({ ...form, classroomId: e.target.value })} required>
+            <select
+              value={form.classroomId}
+              onChange={e => setForm({ ...form, classroomId: e.target.value })}
+              required
+            >
               {classrooms.map(c => (
-                <option key={c.id} value={c.id}>{c.name}{c.grade ? ` - ${c.grade}` : ''}</option>
+                <option key={c.id} value={c.id}>
+                  {c.name}{c.grade ? ` - ${c.grade}` : ''}
+                </option>
               ))}
             </select>
+          </div>
+          <div className={styles.formGroup}>
+            <label>QR Token <span className={styles.optional}>(optionnel — généré automatiquement si vide)</span></label>
+            <input
+              value={form.qrToken}
+              onChange={e => setForm({ ...form, qrToken: e.target.value })}
+              placeholder="Ex: LIV-0010"
+            />
           </div>
           <button type="submit" className={styles.submitBtn} disabled={loading}>
             {loading ? <Loader size={16} className={styles.spin} /> : <Plus size={16} />}
@@ -133,6 +164,7 @@ export default function BooksPage() {
   const [filtreClassroom, setFiltreClassroom] = useState('');
   const [filtreStatus, setFiltreStatus]       = useState<BookStatus | ''>('');
   const [selectedBook, setSelectedBook]       = useState<Book | null>(null);
+  const [showQR, setShowQR]                   = useState(false);
   const [showAdd, setShowAdd]                 = useState(false);
   const [selectedIds, setSelectedIds]         = useState<string[]>([]);
   const [deleting, setDeleting]               = useState(false);
@@ -237,7 +269,9 @@ export default function BooksPage() {
             >
               <option value="">Toutes les classes</option>
               {classrooms.map(c => (
-                <option key={c.id} value={c.id}>{c.name}{c.grade ? ` - ${c.grade}` : ''}</option>
+                <option key={c.id} value={c.id}>
+                  {c.name}{c.grade ? ` - ${c.grade}` : ''}
+                </option>
               ))}
             </select>
             <ChevronDown size={14} className={styles.chevron} />
@@ -275,7 +309,7 @@ export default function BooksPage() {
               <div
                 key={book.id}
                 className={`${styles.bookCard} ${isSelected ? styles.bookCardSelected : ''}`}
-                onClick={() => setSelectedBook(book)}
+                onClick={() => { setSelectedBook(book); setShowQR(false); }}
               >
                 <div className={styles.bookInfo}>
                   <div className={styles.bookMeta}>
@@ -309,13 +343,15 @@ export default function BooksPage() {
         </div>
       )}
 
-      {/* Modale détail / QR */}
-      {selectedBook && (
+      {/* Modale détail livre */}
+      {selectedBook && !showQR && (
         <div className={styles.modalOverlay} onClick={() => setSelectedBook(null)}>
           <div className={styles.modal} onClick={e => e.stopPropagation()}>
             <div className={styles.modalHeader}>
               <h3>Détails du livre</h3>
-              <button className={styles.closeBtn} onClick={() => setSelectedBook(null)}><X size={18} /></button>
+              <button className={styles.closeBtn} onClick={() => setSelectedBook(null)}>
+                <X size={18} />
+              </button>
             </div>
             <div className={styles.bookDetail}>
               <p className={styles.detailTitle}>{selectedBook.title}</p>
@@ -339,7 +375,10 @@ export default function BooksPage() {
                 <>
                   <div className={styles.detailRow}>
                     <span>Emprunté par</span>
-                    <span>{selectedBook.currentLoan.student?.firstName} {selectedBook.currentLoan.student?.lastName}</span>
+                    <span>
+                      {selectedBook.currentLoan.student?.firstName}{' '}
+                      {selectedBook.currentLoan.student?.lastName}
+                    </span>
                   </div>
                   {selectedBook.currentLoan.dueAt && (
                     <div className={styles.detailRow}>
@@ -354,7 +393,7 @@ export default function BooksPage() {
             </div>
             <button
               className={styles.printBtn}
-              onClick={() => { setSelectedBook(null); setTimeout(() => setSelectedBook(selectedBook), 0); }}
+              onClick={() => setShowQR(true)}
             >
               <QrCode size={16} />
               Imprimer l'étiquette QR
@@ -363,6 +402,15 @@ export default function BooksPage() {
         </div>
       )}
 
+      {/* Modale QR */}
+      {selectedBook && showQR && (
+        <QRModal
+          book={selectedBook}
+          onClose={() => { setShowQR(false); setSelectedBook(null); }}
+        />
+      )}
+
+      {/* Modale ajout */}
       {showAdd && (
         <AddBookModal
           classrooms={classrooms}

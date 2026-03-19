@@ -1,18 +1,17 @@
 import { Request, Response, NextFunction } from "express";
 import { SchoolService } from "./school.service";
+import { AppError } from "../../errors/app-error";
 
 export class SchoolController {
   constructor(private service = new SchoolService()) {}
 
-  private getTeacherId(req: Request): string {
-    const teacherId = req.header("x-teacher-id");
-    if (!teacherId) {
-      // later replaced by JWT auth middleware
-      throw new Error("Missing x-teacher-id header");
-    }
-    return teacherId;
+private getTeacherId(req: Request): string {
+  const teacherId = req.user?.id;
+  if (!teacherId) {
+    throw new AppError("Missing authentication", 401);
   }
-
+  return teacherId;
+}
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const teacherId = this.getTeacherId(req);

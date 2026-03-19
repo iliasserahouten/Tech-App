@@ -1,30 +1,39 @@
 import api from '../lib/axios';
-import { Classroom, ClassSchedule, DayOfWeek } from '../types';
+import { Classroom, ClassSchedule } from '../types';
+
+function extract<T>(response: any): T {
+  return response.data?.data ?? response.data;
+}
+
+function extractArray<T>(response: any): T[] {
+  return response.data?.data ?? response.data ?? [];
+}
 
 export const classroomsService = {
-  // Obtenir toutes les classes de l'enseignant
+
+  // Obtenir toutes les classes → tableau direct []
   async getMyClassrooms(): Promise<Classroom[]> {
-    const response = await api.get<Classroom[]>('/classrooms/my-classrooms');
-    return response.data;
+    const response = await api.get('/classrooms/my-classrooms');
+    return extractArray<Classroom>(response);
   },
 
   // Obtenir une classe par ID
   async getClassroomById(id: string): Promise<Classroom> {
-    const response = await api.get<Classroom>(`/classrooms/${id}`);
-    return response.data;
+    const response = await api.get(`/classrooms/${id}`);
+    return extract<Classroom>(response);
   },
 
-  // Obtenir le planning de la semaine
+  // Obtenir le planning → tableau direct []
   async getMySchedule(): Promise<ClassSchedule[]> {
-    const response = await api.get<ClassSchedule[]>('/class-schedules/my-schedule');
-    return response.data;
+    const response = await api.get('/class-schedules/my-schedule');
+    return extractArray<ClassSchedule>(response);
   },
 
   // Obtenir la classe active du jour
   async getTodayClassroom(): Promise<Classroom | null> {
     try {
-      const response = await api.get<Classroom>('/class-schedules/today');
-      return response.data;
+      const response = await api.get('/class-schedules/today');
+      return extract<Classroom>(response);
     } catch (error) {
       return null;
     }
@@ -36,8 +45,8 @@ export const classroomsService = {
     grade?: string;
     schoolId: string;
   }): Promise<Classroom> {
-    const response = await api.post<Classroom>('/classrooms', data);
-    return response.data;
+    const response = await api.post('/classrooms', data);
+    return extract<Classroom>(response);
   },
 
   // Mettre à jour une classe
@@ -45,8 +54,8 @@ export const classroomsService = {
     name: string;
     grade: string;
   }>): Promise<Classroom> {
-    const response = await api.put<Classroom>(`/classrooms/${id}`, data);
-    return response.data;
+    const response = await api.put(`/classrooms/${id}`, data);
+    return extract<Classroom>(response);
   },
 
   // Supprimer une classe

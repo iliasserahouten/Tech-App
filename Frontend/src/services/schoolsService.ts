@@ -1,25 +1,33 @@
 import api from '../lib/axios';
 import { School } from '../types';
 
+function extract<T>(response: any): T {
+  return response.data?.data ?? response.data;
+}
+
+function extractArray<T>(response: any): T[] {
+  return response.data?.data ?? response.data ?? [];
+}
+
 export const schoolsService = {
-  // Obtenir les écoles de l'enseignant
+
+  // Liste des écoles → { data: [...] }
   async getMySchools(): Promise<School[]> {
-    const response = await api.get<School[]>('/schools/my-schools');
-    return response.data;
+    const response = await api.get('/schools');
+    return extractArray<School>(response);
   },
 
-  // Obtenir une école par ID
-  async getSchoolById(id: string): Promise<School> {
-    const response = await api.get<School>(`/schools/${id}`);
-    return response.data;
-  },
-
-  // Créer une école
+  // Créer une école → { data: {...} }
   async createSchool(data: {
     name: string;
     city?: string;
   }): Promise<School> {
-    const response = await api.post<School>('/schools', data);
-    return response.data;
+    const response = await api.post('/schools', data);
+    return extract<School>(response);
+  },
+
+  // Supprimer une école
+  async deleteSchool(id: string): Promise<void> {
+    await api.delete(`/schools/${id}`);
   },
 };

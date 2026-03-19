@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Camera, Keyboard, CheckCircle, XCircle, AlertTriangle, ArrowLeft, User, Calendar, Loader, BookOpen, UserCheck } from 'lucide-react';
 import { booksService } from '../../services/booksService';
 import { studentsService } from '../../services/studentsService';
@@ -78,20 +78,20 @@ function EmpruntForm({
   const [loadingStudents, setLoadingStudents] = useState(true);
   const [error, setError]         = useState('');
 
-  useState(() => {
+  // ← useEffect au lieu de useState
+  useEffect(() => {
     studentsService.getStudentsByClassroom(book.classroomId).then(data => {
       setStudents(data);
       if (data.length > 0) setStudentId(data[0].id);
       setLoadingStudents(false);
     }).catch(() => setLoadingStudents(false));
-  });
+  }, [book.classroomId]);
 
   const handleConfirm = async () => {
     if (!studentId) return;
     setLoading(true);
     setError('');
     try {
-      // Le backend attend qrToken et studentId
       await booksService.createLoan({
         qrToken: book.qrToken,
         studentId,
@@ -200,7 +200,6 @@ function RetourForm({
     setLoading(true);
     setError('');
     try {
-      // Le backend attend qrToken (pas loanId)
       await booksService.returnBook(book.qrToken);
       onSuccess(`"${book.title}" est de retour en rayon`);
     } catch (err: any) {

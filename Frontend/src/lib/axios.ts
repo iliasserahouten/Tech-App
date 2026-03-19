@@ -7,7 +7,7 @@ export const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000, // 10 secondes
+  timeout: 10000,
 });
 
 // Intercepteur de requête pour ajouter le token JWT
@@ -24,11 +24,17 @@ api.interceptors.request.use(
   }
 );
 
-// Intercepteur de réponse pour gérer les erreurs d'authentification
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Ne rediriger que si on n'est pas déjà sur la page de login
+    if (error.response?.status === 401) {
+      console.error('🔴 401 sur:', error.config?.url);
+      console.error('🔴 Méthode:', error.config?.method?.toUpperCase());
+      console.error('🔴 Body:', error.config?.data);
+      console.error('🔴 Réponse:', error.response?.data);
+      debugger; // ← ajouter ici
+    }
+
     if (error.response?.status === 401 && window.location.pathname !== '/login') {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
@@ -37,5 +43,4 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
-
 export default api;

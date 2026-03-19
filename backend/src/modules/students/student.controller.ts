@@ -9,10 +9,10 @@ export class StudentController {
   constructor(private service = new StudentService()) {}
 
   private getTeacherId(req: Request): string {
-    const teacherId = req.header("x-teacher-id");
-    if (!teacherId) throw new AppError("Missing x-teacher-id header", 401);
-    return teacherId;
-  }
+  const teacherId = req.user?.id;
+  if (!teacherId) throw new AppError("Missing authentication", 401);
+  return teacherId;
+}
 
   create = async (req: Request<ClassroomParams, any, any>, res: Response, next: NextFunction) => {
     try {

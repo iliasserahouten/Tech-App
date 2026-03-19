@@ -1,12 +1,20 @@
 import api from '../lib/axios';
 import { Student } from '../types';
 
+function extract<T>(response: any): T {
+  return response.data?.data ?? response.data;
+}
+
+function extractArray<T>(response: any): T[] {
+  return response.data?.data ?? response.data ?? [];
+}
+
 export const studentsService = {
 
-  // Élèves d'une classe
+  // Élèves d'une classe → { data: [...] }
   async getStudentsByClassroom(classroomId: string): Promise<Student[]> {
-    const response = await api.get<Student[]>(`/classrooms/${classroomId}/students`);
-    return response.data;
+    const response = await api.get(`/classrooms/${classroomId}/students`);
+    return extractArray<Student>(response);
   },
 
   // Créer un élève
@@ -16,8 +24,8 @@ export const studentsService = {
     classroomId: string;
   }): Promise<Student> {
     const { classroomId, ...rest } = data;
-    const response = await api.post<Student>(`/classrooms/${classroomId}/students`, rest);
-    return response.data;
+    const response = await api.post(`/classrooms/${classroomId}/students`, rest);
+    return extract<Student>(response);
   },
 
   // Supprimer un élève

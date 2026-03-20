@@ -81,3 +81,56 @@
 .successIcon { width: 80px; height: 80px; background: linear-gradient(135deg, #10B981, #059669); border-radius: 24px; display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 8px 24px rgba(16,185,129,0.3); }
 .successPage h2 { font-size: 1.4rem; font-weight: 700; color: #111827; margin: 0; }
 .successPage p { color: #6B7280; margin: 0; max-width: 280px; }
+
+.reserveHint { font-size: 0.85rem; color: #6B7280; margin: -8px 0 4px;}
+
+.cameraBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #6366F1;
+  border-radius: 12px;
+  background: white;
+  color: #6366F1;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  justify-content: center;
+  transition: all 0.2s;
+  margin-bottom: 12px;
+}
+
+.cameraBtnActive {
+  background: #FEE2E2;
+  border-color: #EF4444;
+  color: #EF4444;
+}
+
+.cameraError {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #FEF3C7;
+  border: 1px solid #F59E0B;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 0.85rem;
+  color: #92400E;
+  margin-bottom: 12px;
+}
+
+#qr-reader video {
+  width: 100% !important;
+  height: auto !important;
+  border-radius: 12px;
+}
+
+#qr-reader__scan_region {
+  background: transparent !important;
+}
+
+#qr-reader__dashboard {
+  display: none !important;
+}

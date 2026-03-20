@@ -22,6 +22,19 @@ export class ClassScheduleController {
       return next(err);
     }
   };
+  upsertSchedule = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const teacherId = req.user!.id;
+    const { classroomId, dayOfWeek } = req.body;
+    if (!classroomId || !dayOfWeek) {
+      return res.status(400).json({ error: { message: "classroomId and dayOfWeek are required" } });
+    }
+    const data = await this.service.upsertSchedule(teacherId, classroomId, dayOfWeek);
+    return res.status(201).json({ data });
+  } catch (err) {
+    return next(err);
+  }
+};
 
   getMySchedule = async (
     req: Request,

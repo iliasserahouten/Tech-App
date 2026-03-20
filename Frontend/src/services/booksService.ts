@@ -72,13 +72,12 @@ export const booksService = {
     return extract<Loan>(response);
   },
 
-  // Créer une réservation
-  async createReservation(data: {
-    bookId: string;
-    studentId: string;
-    desiredFrom?: string;
-  }): Promise<Reservation> {
-    const response = await api.post('/reservations', data);
-    return extract<Reservation>(response);
-  },
+async createReservation(data: {
+  qrToken: string;      // ← qrToken au lieu de bookId
+  studentId: string;
+  desiredFrom?: string;
+}): Promise<Reservation> {
+  const response = await api.post('/reservations', data);
+  return extract<Reservation>(response);
+},
 };

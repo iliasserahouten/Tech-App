@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState, useCallback } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
-import { BookOpen, AlertCircle, CheckCircle, Clock, QrCode, Loader } from 'lucide-react';
+import { BookOpen, AlertCircle, CheckCircle, Clock, QrCode, Loader, RefreshCw } from 'lucide-react';
 import { classroomsService } from '../../services/classroomsService';
 import { statsService } from '../../services/statsService';
 import { Classroom, DashboardStats } from '../../types';
@@ -11,6 +11,7 @@ import styles from './DashboardPage.module.css';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuthStore();
 
   const [currentClassroom, setCurrentClassroom] = useState<Classroom | null>(null);
@@ -19,33 +20,8 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
 
-  // Chargement initial
-  useEffect(() => {
-    if (!user) {
-      setIsLoading(false);
-      return;
-    }
-    loadDashboardData();
-  }, [user]);
-
-  // ← ICI : useEffect AVANT le return, pas après
-  // Recharger les KPIs quand la classe active change
-  useEffect(() => {
-    if (!currentClassroom) return;
-
-    statsService.getClassroomStats(currentClassroom.id)
-      .then(classStats => {
-        setStats(prev => prev ? {
-          ...prev,
-          totalBorrowed: classStats.activeLoans,
-          totalOverdue: classStats.overdueLoans,
-          totalAvailable: classStats.totalBooks - classStats.activeLoans - classStats.overdueLoans,
-        } : prev);
-      })
-      .catch(() => {});
-  }, [currentClassroom]);
-
-  const loadDashboardData = async () => {
+  const loadDashboardData = useCallback(async () => {
+    if (!user) { setIsLoading(false); return; }
     setIsLoading(true);
     setHasError(false);
 
@@ -57,9 +33,23 @@ export default function DashboardPage() {
       const active = todayClassroom || (classrooms.length > 0 ? classrooms[0] : null);
       setCurrentClassroom(active);
 
+      // Charger les stats globales (activité récente + emprunts actifs)
       try {
         const dashboardStats = await statsService.getDashboardStats();
         setStats(dashboardStats);
+
+        // Appliquer les stats de la classe active par-dessus
+        if (active) {
+          try {
+            const classStats = await statsService.getClassroomStats(active.id);
+            setStats(prev => prev ? {
+              ...prev,
+              totalBorrowed: classStats.activeLoans,
+              totalOverdue: classStats.overdueLoans,
+              totalAvailable: classStats.totalBooks - classStats.activeLoans - classStats.overdueLoans,
+            } : prev);
+          } catch {}
+        }
       } catch {
         setStats({
           totalBorrowed: 0,
@@ -71,13 +61,39 @@ export default function DashboardPage() {
           recentActivities: [],
         });
       }
-
-    } catch (error) {
+    } catch {
       setHasError(true);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user]);
+
+  // Chargement initial
+  useEffect(() => {
+    loadDashboardData();
+  }, [loadDashboardData]);
+
+  // ← Rechargement automatique à chaque fois qu'on revient sur le Dashboard
+  useEffect(() => {
+    if (location.pathname === '/dashboard') {
+      loadDashboardData();
+    }
+  }, [location.pathname]);
+
+  // Recharger les KPIs quand la classe active change manuellement
+  useEffect(() => {
+    if (!currentClassroom) return;
+    statsService.getClassroomStats(currentClassroom.id)
+      .then(classStats => {
+        setStats(prev => prev ? {
+          ...prev,
+          totalBorrowed: classStats.activeLoans,
+          totalOverdue: classStats.overdueLoans,
+          totalAvailable: classStats.totalBooks - classStats.activeLoans - classStats.overdueLoans,
+        } : prev);
+      })
+      .catch(() => {});
+  }, [currentClassroom]);
 
   const handleClassroomChange = (classroomId: string) => {
     const classroom = myClassrooms.find(c => c.id === classroomId);
@@ -150,6 +166,15 @@ export default function DashboardPage() {
             </div>
           )}
         </div>
+
+        {/* Bouton rafraîchir */}
+        <button
+          onClick={loadDashboardData}
+          className={styles.refreshBtn}
+          title="Rafraîchir"
+        >
+          <RefreshCw size={18} />
+        </button>
       </div>
 
       {/* KPIs */}

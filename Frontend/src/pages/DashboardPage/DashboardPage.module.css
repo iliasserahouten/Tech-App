@@ -380,3 +380,25 @@
     grid-template-columns: 1fr;
   }
 }
+.refreshBtn {
+  background: #F3F4F6;
+  border: none;
+  border-radius: 8px;
+  padding: 8px;
+  cursor: pointer;
+  color: #6B7280;
+  display: flex;
+  align-items: center;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+.refreshBtn:hover {
+  background: #E5E7EB;
+  color: #374151;
+}
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}

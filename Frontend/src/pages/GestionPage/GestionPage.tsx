@@ -5,6 +5,7 @@ import { classroomsService } from '../../services/classroomsService';
 import { studentsService } from '../../services/studentsService';
 import { School as SchoolType, Classroom, Student, ClassSchedule, DayOfWeek } from '../../types';
 import styles from './GestionPage.module.css';
+import api from '../../lib/axios';
 
 const DAY_LABELS: Record<DayOfWeek, string> = {
   MONDAY: 'Lundi', TUESDAY: 'Mardi', WEDNESDAY: 'Mercredi',
@@ -138,7 +139,31 @@ export default function GestionPage() {
     try { await studentsService.deleteStudent(id); setStudents(p => p.filter(s => s.id !== id)); }
     catch { alert('Erreur lors de la suppression'); }
   };
+const addSchedule = async () => {
+  if (!fSchedule.classroomId) return;
+  setSaving(true); setFormError('');
+  try {
+    const response = await api.post('/class-schedules', {
+      classroomId: fSchedule.classroomId,
+      dayOfWeek: fSchedule.dayOfWeek,
+    });
+    const newSchedule = response.data?.data ?? response.data;
 
+    // Mettre à jour la visualisation immédiatement
+    setSchedules(prev => {
+      const filtered = prev.filter(s => s.dayOfWeek !== fSchedule.dayOfWeek);
+      return [...filtered, newSchedule];
+    });
+    setModal(null);
+  } catch (err: any) {
+    setFormError(err.response?.data?.error?.message ?? 'Erreur');
+  } finally {
+    setSaving(false);
+  }
+};
+
+    // Remplacer le planning existant pour ce jour ou ajouter
+   
   if (loading) {
     return (
       <div className={styles.loading}>
@@ -324,26 +349,34 @@ export default function GestionPage() {
         </Modal>
       )}
 
-      {modal === 'schedule' && (
-        <Modal title="Planning de la semaine" onClose={() => setModal(null)}>
-          <p className={styles.scheduleHint}>Associez chaque jour à une classe. Un seul par jour.</p>
-          <div className={styles.form}>
-            <div className={styles.formGroup}>
-              <label>Jour</label>
-              <select value={fSchedule.dayOfWeek} onChange={e => setFSchedule({ ...fSchedule, dayOfWeek: e.target.value as DayOfWeek })}>
-                {ALL_DAYS.map(d => <option key={d} value={d}>{DAY_LABELS[d]}</option>)}
-              </select>
-            </div>
-            <div className={styles.formGroup}>
-              <label>Classe</label>
-              <select value={fSchedule.classroomId} onChange={e => setFSchedule({ ...fSchedule, classroomId: e.target.value })}>
-                {classrooms.map(c => <option key={c.id} value={c.id}>{c.name}{c.grade ? ` - ${c.grade}` : ''}</option>)}
-              </select>
-            </div>
-            <button className={styles.submitBtn}>Enregistrer</button>
-          </div>
-        </Modal>
-      )}
+{modal === 'schedule' && (
+  <Modal title="Planning de la semaine" onClose={() => setModal(null)}>
+    <p className={styles.scheduleHint}>Associez chaque jour à une classe. Un seul par jour.</p>
+    {formError && <div className={styles.formError}><AlertCircle size={14} />{formError}</div>}
+    <div className={styles.form}>
+      <div className={styles.formGroup}>
+        <label>Jour</label>
+        <select value={fSchedule.dayOfWeek} onChange={e => setFSchedule({ ...fSchedule, dayOfWeek: e.target.value as DayOfWeek })}>
+          {ALL_DAYS.map(d => <option key={d} value={d}>{DAY_LABELS[d]}</option>)}
+        </select>
+      </div>
+      <div className={styles.formGroup}>
+        <label>Classe</label>
+        <select value={fSchedule.classroomId} onChange={e => setFSchedule({ ...fSchedule, classroomId: e.target.value })}>
+          {classrooms.map(c => <option key={c.id} value={c.id}>{c.name}{c.grade ? ` - ${c.grade}` : ''}</option>)}
+        </select>
+      </div>
+      {/* ← onClick ajouté */}
+      <button
+        className={styles.submitBtn}
+        onClick={addSchedule}
+        disabled={saving}
+      >
+        {saving ? 'Enregistrement...' : 'Enregistrer'}
+      </button>
+    </div>
+  </Modal>
+)}
     </div>
   );
 }

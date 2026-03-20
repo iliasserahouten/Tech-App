@@ -7,6 +7,7 @@ import { Book, Classroom, School, BookStatus } from '../../types';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import styles from './BooksPage.module.css';
+import { QRCodeSVG } from 'qrcode.react';
 
 // ── Badge statut ──
 function StatusBadge({ status }: { status: BookStatus }) {
@@ -29,8 +30,14 @@ function QRModal({ book, onClose }: { book: Book; onClose: () => void }) {
           <button className={styles.closeBtn} onClick={onClose}><X size={18} /></button>
         </div>
         <div className={styles.qrContent}>
+          {/* ← Vrai QR code unique par livre */}
           <div className={styles.qrPlaceholder}>
-            <QrCode size={96} />
+            <QRCodeSVG
+              value={book.qrToken}
+              size={160}
+              level="M"
+              includeMargin={true}
+            />
             <p className={styles.qrToken}>{book.qrToken}</p>
           </div>
           <p className={styles.qrBookTitle}>{book.title}</p>

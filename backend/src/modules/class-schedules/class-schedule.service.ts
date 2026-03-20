@@ -46,6 +46,25 @@ export class ClassScheduleService {
 
     return schedule.classroom;
   }
+  async upsertSchedule(teacherId: string, classroomId: string, dayOfWeek: DayOfWeek) {
+  // Vérifier que la classe appartient bien à l'enseignant
+  const classroom = await prisma.classroom.findFirst({
+    where: { id: classroomId, school: { teacherId } },
+  });
+  if (!classroom) throw new AppError("Classroom not found", 404);
+
+  // Supprimer l'ancien planning pour ce jour s'il existe
+  await prisma.classSchedule.deleteMany({
+    where: { teacherId, dayOfWeek },
+  });
+
+  // Créer le nouveau
+  const schedule = await prisma.classSchedule.create({
+    data: { teacherId, classroomId, dayOfWeek },
+    include: { classroom: true },
+  });
+  return schedule;
+}
 
   async getMySchedule(teacherId: string) {
     const schedules = await prisma.classSchedule.findMany({

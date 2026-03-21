@@ -77,4 +77,13 @@ export class LoanService {
     const loans = await this.repo.listLoansForBook(teacherId, bookId);
     return loans.map(toDto);
   }
+  async listAll(teacherId: string, filters: {
+    status?: string;
+    studentId?: string;
+    bookId?: string;
+    classroomId?: string;
+  }) {
+  const loans = await this.repo.listAllLoans(teacherId, filters);
+  return loans.map(toDto);
+  }
 }

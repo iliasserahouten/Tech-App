@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ChevronDown, ChevronRight, Plus, School, Users, UserRound, Trash2, X, CalendarDays, Loader, AlertCircle } from 'lucide-react';
+import { ChevronDown, ChevronRight, Plus, School, Users, UserRound, Trash2, X, CalendarDays, Loader, AlertCircle, Search } from 'lucide-react';
 import { schoolsService } from '../../services/schoolsService';
 import { classroomsService } from '../../services/classroomsService';
 import { studentsService } from '../../services/studentsService';
@@ -33,6 +33,7 @@ export default function GestionPage() {
   const [students,   setStudents]   = useState<Student[]>([]);
   const [schedules,  setSchedules]  = useState<ClassSchedule[]>([]);
   const [loading, setLoading]       = useState(true);
+  const [search, setSearch]         = useState('');  {/* ← NOUVEAU */}
 
   const [openSchools,    setOpenSchools]    = useState<string[]>([]);
   const [openClassrooms, setOpenClassrooms] = useState<string[]>([]);
@@ -40,7 +41,6 @@ export default function GestionPage() {
   const [fabOpen, setFabOpen] = useState(false);
   const [modal,   setModal]   = useState<'school' | 'classroom' | 'student' | 'schedule' | null>(null);
 
-  // Formulaires
   const [fSchool,    setFSchool]    = useState({ name: '', city: '' });
   const [fClassroom, setFClassroom] = useState({ name: '', grade: '', schoolId: '' });
   const [fStudent,   setFStudent]   = useState({ firstName: '', lastName: '', classroomId: '' });
@@ -68,7 +68,6 @@ export default function GestionPage() {
       }
       if (sc.length > 0) setFClassroom(f => ({ ...f, schoolId: sc[0].id }));
 
-      // Charger les élèves de toutes les classes
       const allStudents: Student[] = [];
       for (const cls of cl) {
         try {
@@ -139,31 +138,40 @@ export default function GestionPage() {
     try { await studentsService.deleteStudent(id); setStudents(p => p.filter(s => s.id !== id)); }
     catch { alert('Erreur lors de la suppression'); }
   };
-const addSchedule = async () => {
-  if (!fSchedule.classroomId) return;
-  setSaving(true); setFormError('');
-  try {
-    const response = await api.post('/class-schedules', {
-      classroomId: fSchedule.classroomId,
-      dayOfWeek: fSchedule.dayOfWeek,
-    });
-    const newSchedule = response.data?.data ?? response.data;
 
-    // Mettre à jour la visualisation immédiatement
-    setSchedules(prev => {
-      const filtered = prev.filter(s => s.dayOfWeek !== fSchedule.dayOfWeek);
-      return [...filtered, newSchedule];
-    });
-    setModal(null);
-  } catch (err: any) {
-    setFormError(err.response?.data?.error?.message ?? 'Erreur');
-  } finally {
-    setSaving(false);
-  }
-};
+  const addSchedule = async () => {
+    if (!fSchedule.classroomId) return;
+    setSaving(true); setFormError('');
+    try {
+      const response = await api.post('/class-schedules', {
+        classroomId: fSchedule.classroomId,
+        dayOfWeek: fSchedule.dayOfWeek,
+      });
+      const newSchedule = response.data?.data ?? response.data;
+      setSchedules(prev => {
+        const filtered = prev.filter(s => s.dayOfWeek !== fSchedule.dayOfWeek);
+        return [...filtered, newSchedule];
+      });
+      setModal(null);
+    } catch (err: any) {
+      setFormError(err.response?.data?.error?.message ?? 'Erreur');
+    } finally {
+      setSaving(false);
+    }
+  };
 
-    // Remplacer le planning existant pour ce jour ou ajouter
-   
+  // ← NOUVEAU : filtrage des écoles selon la recherche
+  const filteredSchools = schools.filter(s =>
+    s.name.toLowerCase().includes(search.toLowerCase()) ||
+    s.city?.toLowerCase().includes(search.toLowerCase()) ||
+    classrooms.filter(c => c.schoolId === s.id).some(c =>
+      c.name.toLowerCase().includes(search.toLowerCase()) ||
+      students.filter(st => st.classroomId === c.id).some(st =>
+        `${st.firstName} ${st.lastName}`.toLowerCase().includes(search.toLowerCase())
+      )
+    )
+  );
+
   if (loading) {
     return (
       <div className={styles.loading}>
@@ -178,6 +186,18 @@ const addSchedule = async () => {
       <div className={styles.header}>
         <h1 className={styles.title}>Gestion</h1>
         <p className={styles.count}>{schools.length} école(s) · {classrooms.length} classe(s) · {students.length} élève(s)</p>
+      </div>
+
+      {/* ← NOUVEAU : Barre de recherche */}
+      <div className={styles.searchWrapper}>
+        <Search size={15} className={styles.searchIcon} />
+        <input
+          type="text"
+          placeholder="Rechercher une école, classe ou élève…"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className={styles.searchInput}
+        />
       </div>
 
       {/* Planning de la semaine */}
@@ -202,13 +222,15 @@ const addSchedule = async () => {
 
       {/* Accordéon Écoles > Classes > Élèves */}
       <div className={styles.accordion}>
-        {schools.length === 0 ? (
+        {/* ← MODIFIÉ : filteredSchools au lieu de schools */}
+        {filteredSchools.length === 0 ? (
           <div className={styles.emptyState}>
             <School size={40} className={styles.emptyIcon} />
-            <p>Aucune école. Cliquez sur + pour en ajouter une.</p>
+            <p>{search ? 'Aucun résultat pour cette recherche.' : 'Aucune école. Cliquez sur + pour en ajouter une.'}</p>
           </div>
         ) : (
-          schools.map(school => {
+          // ← MODIFIÉ : filteredSchools au lieu de schools
+          filteredSchools.map(school => {
             const schoolClassrooms = classrooms.filter(c => c.schoolId === school.id);
             const isOpen = openSchools.includes(school.id);
             return (
@@ -287,10 +309,10 @@ const addSchedule = async () => {
         {fabOpen && (
           <div className={styles.fabMenu}>
             {[
-              { label: 'Ajouter une école',   icon: School,      action: () => { setModal('school');    setFabOpen(false); } },
-              { label: 'Ajouter une classe',  icon: Users,       action: () => { setModal('classroom'); setFabOpen(false); } },
-              { label: 'Ajouter un élève',    icon: UserRound,   action: () => { setModal('student');   setFabOpen(false); } },
-              { label: 'Planning semaine',    icon: CalendarDays,action: () => { setModal('schedule');  setFabOpen(false); } },
+              { label: 'Ajouter une école',   icon: School,       action: () => { setModal('school');    setFabOpen(false); } },
+              { label: 'Ajouter une classe',  icon: Users,        action: () => { setModal('classroom'); setFabOpen(false); } },
+              { label: 'Ajouter un élève',    icon: UserRound,    action: () => { setModal('student');   setFabOpen(false); } },
+              { label: 'Planning semaine',    icon: CalendarDays, action: () => { setModal('schedule');  setFabOpen(false); } },
             ].map(({ label, icon: Icon, action }) => (
               <button key={label} className={styles.fabMenuItem} onClick={action}>
                 <Icon size={15} /> {label}
@@ -349,34 +371,29 @@ const addSchedule = async () => {
         </Modal>
       )}
 
-{modal === 'schedule' && (
-  <Modal title="Planning de la semaine" onClose={() => setModal(null)}>
-    <p className={styles.scheduleHint}>Associez chaque jour à une classe. Un seul par jour.</p>
-    {formError && <div className={styles.formError}><AlertCircle size={14} />{formError}</div>}
-    <div className={styles.form}>
-      <div className={styles.formGroup}>
-        <label>Jour</label>
-        <select value={fSchedule.dayOfWeek} onChange={e => setFSchedule({ ...fSchedule, dayOfWeek: e.target.value as DayOfWeek })}>
-          {ALL_DAYS.map(d => <option key={d} value={d}>{DAY_LABELS[d]}</option>)}
-        </select>
-      </div>
-      <div className={styles.formGroup}>
-        <label>Classe</label>
-        <select value={fSchedule.classroomId} onChange={e => setFSchedule({ ...fSchedule, classroomId: e.target.value })}>
-          {classrooms.map(c => <option key={c.id} value={c.id}>{c.name}{c.grade ? ` - ${c.grade}` : ''}</option>)}
-        </select>
-      </div>
-      {/* ← onClick ajouté */}
-      <button
-        className={styles.submitBtn}
-        onClick={addSchedule}
-        disabled={saving}
-      >
-        {saving ? 'Enregistrement...' : 'Enregistrer'}
-      </button>
-    </div>
-  </Modal>
-)}
+      {modal === 'schedule' && (
+        <Modal title="Planning de la semaine" onClose={() => setModal(null)}>
+          <p className={styles.scheduleHint}>Associez chaque jour à une classe. Un seul par jour.</p>
+          {formError && <div className={styles.formError}><AlertCircle size={14} />{formError}</div>}
+          <div className={styles.form}>
+            <div className={styles.formGroup}>
+              <label>Jour</label>
+              <select value={fSchedule.dayOfWeek} onChange={e => setFSchedule({ ...fSchedule, dayOfWeek: e.target.value as DayOfWeek })}>
+                {ALL_DAYS.map(d => <option key={d} value={d}>{DAY_LABELS[d]}</option>)}
+              </select>
+            </div>
+            <div className={styles.formGroup}>
+              <label>Classe</label>
+              <select value={fSchedule.classroomId} onChange={e => setFSchedule({ ...fSchedule, classroomId: e.target.value })}>
+                {classrooms.map(c => <option key={c.id} value={c.id}>{c.name}{c.grade ? ` - ${c.grade}` : ''}</option>)}
+              </select>
+            </div>
+            <button className={styles.submitBtn} onClick={addSchedule} disabled={saving}>
+              {saving ? 'Enregistrement...' : 'Enregistrer'}
+            </button>
+          </div>
+        </Modal>
+      )}
     </div>
   );
-}
+} 

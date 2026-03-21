@@ -43,4 +43,14 @@ export class LoanController {
       return next(err);
     }
   };
+  listAll = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const teacherId = this.getTeacherId(req);
+      const { status, studentId, bookId, classroomId } = req.query as Record<string, string>;
+      const data = await this.service.listAll(teacherId, { status, studentId, bookId, classroomId });
+      return res.json({ data });
+    } catch (err) {
+      return next(err);
+    }
+  };
 }

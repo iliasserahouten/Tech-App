@@ -84,3 +84,7 @@
 .submitBtn:disabled { opacity: 0.6; cursor: not-allowed; }
 .formError { display: flex; align-items: center; gap: 8px; background: #FEE2E2; color: #DC2626; padding: 10px 12px; border-radius: 8px; font-size: 0.85rem; margin-bottom: 4px; }
 .scheduleHint { font-size: 0.82rem; color: #6B7280; margin: -12px 0 8px; }
+.searchWrapper { position: relative; margin-bottom: 16px; }
+.searchIcon    { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #9CA3AF; }
+.searchInput   { width: 100%; padding: 10px 12px 10px 36px; border: 1px solid #E5E7EB; border-radius: 10px; font-size: 0.9rem; outline: none; box-sizing: border-box; background: white; }
+.searchInput:focus { border-color: #6366F1; box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }

@@ -75,4 +75,36 @@ export class LoanRepository {
       select: { id: true },
     });
   }
+  listAllLoans(teacherId: string, filters: {
+  status?: string;
+  studentId?: string;
+  bookId?: string;
+  classroomId?: string;
+}) {
+  const where: any = { teacherId };
+
+  if (filters.status)      where.status    = filters.status;
+  if (filters.studentId)   where.studentId = filters.studentId;
+  if (filters.bookId)      where.bookId    = filters.bookId;
+  if (filters.classroomId) where.book      = { classroomId: filters.classroomId };
+
+  return prisma.loan.findMany({
+    where,
+    orderBy: { borrowedAt: "desc" },
+    include: {
+      book: {
+        select: {
+          id: true, title: true, qrToken: true, universe: true, publisher: true,
+          classroom: { select: { id: true, name: true, school: { select: { id: true, name: true } } } },
+        },
+      },
+      student: {
+        select: {
+          id: true, firstName: true, lastName: true,
+          classroom: { select: { id: true, name: true } }
+        }
+      },
+    },
+  });
+}
 }

@@ -1,5 +1,5 @@
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { BookOpen, LogOut, Home, Library, ScanLine, Settings } from 'lucide-react';
+import { BookOpen, LogOut, Home, Library, ScanLine, Settings, History } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import toast from 'react-hot-toast';
 import styles from './Layout.module.css';
@@ -20,6 +20,7 @@ export default function Layout() {
     { path: '/books',     label: 'Livres',           icon: Library },
     { path: '/scan',      label: 'Scan',             icon: ScanLine },
     { path: '/gestion',   label: 'Gestion',          icon: Settings },
+    { path: '/history', label: 'Historique', icon: History },
   ];
 
   return (
@@ -79,4 +80,4 @@ export default function Layout() {
       </main>
     </div>
   );
-}
+} 

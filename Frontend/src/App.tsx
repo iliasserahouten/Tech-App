@@ -14,6 +14,7 @@ import DashboardPage from './pages/DashboardPage/DashboardPage';
 import BooksPage from './pages/BooksPage/BooksPage';
 import ScanPage from './pages/ScanPage/ScanPage';
 import GestionPage from './pages/GestionPage/GestionPage';
+import HistoryPage from './pages/HistoryPage/HistoryPage';
 
 function App() {
   const { initAuth } = useAuthStore();
@@ -67,6 +68,7 @@ function App() {
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="books"     element={<BooksPage />} />
           <Route path="scan"      element={<ScanPage />} />
+          <Route path="history"   element={<HistoryPage />} />
           <Route path="gestion"   element={<GestionPage />} />
         </Route>
 

@@ -1,5 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
-import { Camera, Keyboard, CheckCircle, XCircle, AlertTriangle, ArrowLeft, User, Users, Calendar, Loader, BookOpen, UserCheck } from 'lucide-react';
+import {
+  Camera, Keyboard, CheckCircle, XCircle, AlertTriangle,
+  ArrowLeft, User, Users, Calendar, Loader, BookOpen,
+  UserCheck, Zap,
+} from 'lucide-react';
 import { booksService } from '../../services/booksService';
 import { studentsService } from '../../services/studentsService';
 import { classroomsService } from '../../services/classroomsService';
@@ -7,7 +11,7 @@ import { Book, Student, Loan, Classroom } from '../../types';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import styles from './ScanPage.module.css';
-
+import { Html5Qrcode } from 'html5-qrcode';
 
 function addDays(days: number): string {
   const d = new Date();
@@ -15,45 +19,74 @@ function addDays(days: number): string {
   return d.toISOString().split('T')[0];
 }
 
-// ── Phase 1 : Scanner ──
-import { Html5Qrcode } from 'html5-qrcode';
-
+// ── Phase 1 : Scanner QR ─────────────────────────────────────────────────────
 function ScanFrame({ onScan }: { onScan: (code: string) => void }) {
   const [manual, setManual]             = useState('');
   const [cameraActive, setCameraActive] = useState(false);
   const [cameraError, setCameraError]   = useState('');
+  const [scanning, setScanning]         = useState(false);
   const scannerRef = useRef<Html5Qrcode | null>(null);
 
+  // ── Démarrer la caméra ────────────────────────────────────────────────────
   const startCamera = async () => {
     setCameraError('');
+    setScanning(false);
     try {
       const scanner = new Html5Qrcode('qr-reader');
       scannerRef.current = scanner;
       await scanner.start(
+        // 'environment' = caméra arrière sur mobile
         { facingMode: 'environment' },
-        { fps: 10, qrbox: { width: 200, height: 200 } },
+        {
+          fps: 15,
+          qrbox: { width: 240, height: 240 },
+          // Réduire le délai entre scans (évite les doubles lectures)
+          disableFlip: false,
+        },
         (decodedText) => {
+          // Vibration tactile sur mobile (si supporté)
+          if ('vibrate' in navigator) navigator.vibrate(80);
           stopCamera();
           onScan(decodedText.trim().toUpperCase());
         },
-        () => {}
+        () => { /* erreurs de décodage ignorées */ }
       );
       setCameraActive(true);
     } catch (err: any) {
-      setCameraError('Impossible d\'accéder à la caméra. Utilisez la saisie manuelle.');
+      // Erreur caméra : message adapté selon le cas
+      if (err?.name === 'NotAllowedError') {
+        setCameraError('Accès à la caméra refusé. Autorisez l\'accès dans les paramètres de votre navigateur.');
+      } else if (err?.name === 'NotFoundError') {
+        setCameraError('Aucune caméra détectée sur cet appareil.');
+      } else {
+        setCameraError('Impossible d\'accéder à la caméra. Utilisez la saisie manuelle.');
+      }
     }
   };
 
+  // ── Arrêter la caméra ─────────────────────────────────────────────────────
   const stopCamera = async () => {
     if (scannerRef.current) {
-      try { await scannerRef.current.stop(); } catch {}
+      try { await scannerRef.current.stop(); } catch { /* ignoré */ }
       scannerRef.current = null;
     }
     setCameraActive(false);
   };
 
+  // Nettoyage au démontage du composant
   useEffect(() => {
     return () => { stopCamera(); };
+  }, []);
+
+  // ── Démarrage automatique de la caméra ────────────────────────────────────
+  // Sur mobile (PWA), la caméra s'ouvre automatiquement
+  useEffect(() => {
+    const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+    if (isMobile) {
+      // Petit délai pour que le DOM soit prêt
+      const timer = setTimeout(() => startCamera(), 400);
+      return () => clearTimeout(timer);
+    }
   }, []);
 
   const handleManual = (e: React.FormEvent) => {
@@ -66,50 +99,49 @@ function ScanFrame({ onScan }: { onScan: (code: string) => void }) {
     <div className={styles.scanFrame}>
       <div className={styles.scanTitle}>
         <h1>Scanner un livre</h1>
-        <p>Scannez le QR code ou saisissez le code manuellement</p>
+        <p>Pointez la caméra vers le QR code du livre</p>
       </div>
 
+      {/* Zone vidéo — html5-qrcode injecte le flux caméra ici */}
       <div
         id="qr-reader"
-        style={{
-          width: '100%',
-          maxWidth: '340px',
-          margin: '0 auto',
-          borderRadius: '16px',
-          overflow: 'hidden',
-          minHeight: cameraActive ? '280px' : '0',
-          background: '#000',
-        }}
+        className={styles.qrReaderContainer}
+        style={{ minHeight: cameraActive ? '280px' : '0' }}
       />
 
+      {/* Viewfinder animé (affiché si caméra inactive) */}
       {!cameraActive && (
         <div className={styles.viewfinder}>
           <div className={styles.viewfinderInner}>
             <Camera size={48} className={styles.cameraIcon} />
-            <div className={styles.corner + ' ' + styles.cornerTL} />
-            <div className={styles.corner + ' ' + styles.cornerTR} />
-            <div className={styles.corner + ' ' + styles.cornerBL} />
-            <div className={styles.corner + ' ' + styles.cornerBR} />
+            <div className={`${styles.corner} ${styles.cornerTL}`} />
+            <div className={`${styles.corner} ${styles.cornerTR}`} />
+            <div className={`${styles.corner} ${styles.cornerBL}`} />
+            <div className={`${styles.corner} ${styles.cornerBR}`} />
             <div className={styles.scanLine} />
           </div>
           <p className={styles.viewfinderHint}>Positionnez le QR code dans le cadre</p>
         </div>
       )}
 
+      {/* Message d'erreur caméra */}
       {cameraError && (
         <div className={styles.cameraError}>
           <AlertTriangle size={14} /> {cameraError}
         </div>
       )}
 
+      {/* Bouton caméra */}
       <button
         className={`${styles.cameraBtn} ${cameraActive ? styles.cameraBtnActive : ''}`}
         onClick={cameraActive ? stopCamera : startCamera}
+        disabled={scanning}
       >
         <Camera size={18} />
         {cameraActive ? 'Arrêter la caméra' : 'Activer la caméra'}
       </button>
 
+      {/* Saisie manuelle */}
       <div className={styles.manualSection}>
         <p className={styles.manualLabel}>
           <Keyboard size={14} />
@@ -121,33 +153,37 @@ function ScanFrame({ onScan }: { onScan: (code: string) => void }) {
             onChange={e => setManual(e.target.value)}
             placeholder="Ex: LIV-0001"
             className={styles.manualInput}
+            // Sur mobile : clavier numérique/alphanumérique, majuscules auto
+            autoCapitalize="characters"
+            autoCorrect="off"
+            spellCheck={false}
           />
-          <button type="submit" className={styles.manualBtn}>Valider</button>
+          <button type="submit" className={styles.manualBtn}>
+            <Zap size={14} /> Valider
+          </button>
         </form>
       </div>
     </div>
   );
 }
 
+// ── Phase 2 : Formulaire d'emprunt ───────────────────────────────────────────
 function EmpruntForm({
-  book,
-  onBack,
-  onSuccess,
+  book, onBack, onSuccess,
 }: {
   book: Book;
   onBack: () => void;
   onSuccess: (msg: string) => void;
 }) {
-  const [allClassrooms, setAllClassrooms]         = useState<Classroom[]>([]);
+  const [allClassrooms, setAllClassrooms]             = useState<Classroom[]>([]);
   const [selectedClassroomId, setSelectedClassroomId] = useState('');
-  const [students, setStudents]                   = useState<Student[]>([]);
-  const [studentId, setStudentId]                 = useState('');
-  const [dueAt, setDueAt]                         = useState(addDays(15));
-  const [loading, setLoading]                     = useState(false);
-  const [loadingStudents, setLoadingStudents]     = useState(true);
-  const [error, setError]                         = useState('');
+  const [students, setStudents]                       = useState<Student[]>([]);
+  const [studentId, setStudentId]                     = useState('');
+  const [dueAt, setDueAt]                             = useState(addDays(15));
+  const [loading, setLoading]                         = useState(false);
+  const [loadingStudents, setLoadingStudents]         = useState(true);
+  const [error, setError]                             = useState('');
 
-  // Charger toutes les classes au montage
   useEffect(() => {
     Promise.all([
       classroomsService.getMyClassrooms(),
@@ -155,9 +191,6 @@ function EmpruntForm({
     ]).then(([cls, todayClass]) => {
       setAllClassrooms(cls);
       if (cls.length > 0) {
-        // Priorité : classe du jour > première classe
-        // On n'utilise PAS book.classroomId car le livre appartient à une classe
-        // mais l'élève peut être dans n'importe quelle classe
         const defaultId = todayClass
           ? cls.find(c => c.id === todayClass.id)?.id ?? cls[0].id
           : cls[0].id;
@@ -166,7 +199,6 @@ function EmpruntForm({
     }).catch(() => {});
   }, []);
 
-  // Recharger les élèves quand la classe sélectionnée change
   useEffect(() => {
     if (!selectedClassroomId) return;
     setLoadingStudents(true);
@@ -183,11 +215,8 @@ function EmpruntForm({
     setLoading(true);
     setError('');
     try {
-      await booksService.createLoan({
-        qrToken: book.qrToken,
-        studentId,
-        dueAt,
-      });
+      await booksService.createLoan({ qrToken: book.qrToken, studentId, dueAt });
+      if ('vibrate' in navigator) navigator.vibrate([80, 40, 80]);
       const student = students.find(s => s.id === studentId);
       onSuccess(`Emprunt enregistré pour ${student?.firstName} ${student?.lastName}`);
     } catch (err: any) {
@@ -203,7 +232,7 @@ function EmpruntForm({
         <ArrowLeft size={18} /> Retour
       </button>
 
-      <div className={styles.bookCard + ' ' + styles.bookCardAvailable}>
+      <div className={`${styles.bookCard} ${styles.bookCardAvailable}`}>
         <div className={styles.bookCardIcon}>
           <CheckCircle size={24} className={styles.iconGreen} />
         </div>
@@ -215,16 +244,11 @@ function EmpruntForm({
       </div>
 
       <h2 className={styles.actionTitle}>Nouvel Emprunt</h2>
-
       {error && <div className={styles.errorBox}><AlertTriangle size={16} />{error}</div>}
 
       <div className={styles.formSection}>
-
-        {/* Sélecteur de classe */}
         <div className={styles.formGroup}>
-          <label className={styles.formLabel}>
-            <Users size={14} /> Classe
-          </label>
+          <label className={styles.formLabel}><Users size={14} /> Classe</label>
           <select
             value={selectedClassroomId}
             onChange={e => setSelectedClassroomId(e.target.value)}
@@ -238,11 +262,8 @@ function EmpruntForm({
           </select>
         </div>
 
-        {/* Sélecteur d'élève */}
         <div className={styles.formGroup}>
-          <label className={styles.formLabel}>
-            <User size={14} /> Élève
-          </label>
+          <label className={styles.formLabel}><User size={14} /> Élève</label>
           {loadingStudents ? (
             <div className={styles.loadingStudents}>
               <Loader size={16} className={styles.spin} /> Chargement...
@@ -259,13 +280,11 @@ function EmpruntForm({
             </select>
           ) : (
             <p className={styles.noStudents}>
-              <AlertTriangle size={14} />
-              Aucun élève dans cette classe. Ajoutez-en dans la Gestion.
+              <AlertTriangle size={14} /> Aucun élève dans cette classe.
             </p>
           )}
         </div>
 
-        {/* Date de retour */}
         <div className={styles.formGroup}>
           <label className={styles.formLabel}>
             <Calendar size={14} /> Date de retour prévue (J+15 par défaut)
@@ -281,7 +300,7 @@ function EmpruntForm({
       </div>
 
       <button
-        className={styles.confirmBtn + ' ' + styles.confirmBtnGreen}
+        className={`${styles.confirmBtn} ${styles.confirmBtnGreen}`}
         onClick={handleConfirm}
         disabled={loading || !studentId}
       >
@@ -292,27 +311,24 @@ function EmpruntForm({
   );
 }
 
-
+// ── Phase 3 : Formulaire de retour ───────────────────────────────────────────
 function RetourForm({
-  book,
-  loan,
-  onBack,
-  onSuccess,
+  book, loan, onBack, onSuccess,
 }: {
   book: Book;
   loan: Loan | null;
   onBack: () => void;
   onSuccess: (msg: string) => void;
 }) {
-  const [loading, setLoading]               = useState(false);
-  const [error, setError]                   = useState('');
-  const [showReservation, setShowReservation] = useState(false);
-  const [allClassrooms, setAllClassrooms]   = useState<Classroom[]>([]);
+  const [loading, setLoading]                         = useState(false);
+  const [error, setError]                             = useState('');
+  const [showReservation, setShowReservation]         = useState(false);
+  const [allClassrooms, setAllClassrooms]             = useState<Classroom[]>([]);
   const [selectedClassroomId, setSelectedClassroomId] = useState('');
-  const [students, setStudents]             = useState<Student[]>([]);
-  const [studentId, setStudentId]           = useState('');
-  const [loadingStudents, setLoadingStudents] = useState(false);
-  const [desiredFrom, setDesiredFrom]       = useState(addDays(1));
+  const [students, setStudents]                       = useState<Student[]>([]);
+  const [studentId, setStudentId]                     = useState('');
+  const [loadingStudents, setLoadingStudents]         = useState(false);
+  const [desiredFrom, setDesiredFrom]                 = useState(addDays(1));
   const isLate = loan?.status === 'LATE';
 
   useEffect(() => {
@@ -339,6 +355,7 @@ function RetourForm({
     setError('');
     try {
       await booksService.returnBook(book.qrToken);
+      if ('vibrate' in navigator) navigator.vibrate([80, 40, 80]);
       onSuccess(`"${book.title}" est de retour en rayon`);
     } catch (err: any) {
       setError(err.response?.data?.error?.message ?? 'Erreur lors du retour');
@@ -352,11 +369,7 @@ function RetourForm({
     setLoading(true);
     setError('');
     try {
-      await booksService.createReservation({
-        qrToken: book.qrToken,
-        studentId,
-        desiredFrom,
-      });
+      await booksService.createReservation({ qrToken: book.qrToken, studentId, desiredFrom });
       const student = students.find(s => s.id === studentId);
       onSuccess(`Réservation créée pour ${student?.firstName} ${student?.lastName}`);
     } catch (err: any) {
@@ -388,7 +401,6 @@ function RetourForm({
       {!showReservation ? (
         <>
           <h2 className={styles.actionTitle}>Retour en rayon</h2>
-
           {error && <div className={styles.errorBox}><AlertTriangle size={16} />{error}</div>}
 
           {loan && (
@@ -413,7 +425,7 @@ function RetourForm({
           )}
 
           <button
-            className={styles.confirmBtn + ' ' + styles.confirmBtnBlue}
+            className={`${styles.confirmBtn} ${styles.confirmBtnBlue}`}
             onClick={handleConfirm}
             disabled={loading}
           >
@@ -421,26 +433,19 @@ function RetourForm({
             {loading ? 'Enregistrement...' : 'Confirmer le retour'}
           </button>
 
-          <button
-            className={styles.reserveBtn}
-            onClick={() => setShowReservation(true)}
-          >
-            <UserCheck size={16} />
-            Réserver pour un autre élève
+          <button className={styles.reserveBtn} onClick={() => setShowReservation(true)}>
+            <UserCheck size={16} /> Réserver pour un autre élève
           </button>
         </>
       ) : (
         <>
           <h2 className={styles.actionTitle}>Réserver ce livre</h2>
           <p className={styles.reserveHint}>Le livre sera réservé dès son retour en rayon.</p>
-
           {error && <div className={styles.errorBox}><AlertTriangle size={16} />{error}</div>}
 
           <div className={styles.formSection}>
             <div className={styles.formGroup}>
-              <label className={styles.formLabel}>
-                <Users size={14} /> Classe
-              </label>
+              <label className={styles.formLabel}><Users size={14} /> Classe</label>
               <select
                 value={selectedClassroomId}
                 onChange={e => setSelectedClassroomId(e.target.value)}
@@ -455,9 +460,7 @@ function RetourForm({
             </div>
 
             <div className={styles.formGroup}>
-              <label className={styles.formLabel}>
-                <User size={14} /> Élève
-              </label>
+              <label className={styles.formLabel}><User size={14} /> Élève</label>
               {loadingStudents ? (
                 <div className={styles.loadingStudents}>
                   <Loader size={16} className={styles.spin} /> Chargement...
@@ -474,8 +477,7 @@ function RetourForm({
                 </select>
               ) : (
                 <p className={styles.noStudents}>
-                  <AlertTriangle size={14} />
-                  Aucun élève dans cette classe.
+                  <AlertTriangle size={14} /> Aucun élève dans cette classe.
                 </p>
               )}
             </div>
@@ -495,7 +497,7 @@ function RetourForm({
           </div>
 
           <button
-            className={styles.confirmBtn + ' ' + styles.confirmBtnBlue}
+            className={`${styles.confirmBtn} ${styles.confirmBtnBlue}`}
             onClick={handleReservation}
             disabled={loading || !studentId}
           >
@@ -503,12 +505,8 @@ function RetourForm({
             {loading ? 'Réservation...' : 'Confirmer la réservation'}
           </button>
 
-          <button
-            className={styles.reserveBtn}
-            onClick={() => setShowReservation(false)}
-          >
-            <ArrowLeft size={16} />
-            Annuler
+          <button className={styles.reserveBtn} onClick={() => setShowReservation(false)}>
+            <ArrowLeft size={16} /> Annuler
           </button>
         </>
       )}
@@ -516,6 +514,7 @@ function RetourForm({
   );
 }
 
+// ── Écran de succès ───────────────────────────────────────────────────────────
 function SuccessScreen({ message, onReset }: { message: string; onReset: () => void }) {
   return (
     <div className={styles.successPage}>
@@ -524,14 +523,14 @@ function SuccessScreen({ message, onReset }: { message: string; onReset: () => v
       </div>
       <h2>Opération réussie !</h2>
       <p>{message}</p>
-      <button className={styles.confirmBtn + ' ' + styles.confirmBtnBlue} onClick={onReset}>
-        <BookOpen size={18} />
-        Scanner un autre livre
+      <button className={`${styles.confirmBtn} ${styles.confirmBtnBlue}`} onClick={onReset}>
+        <BookOpen size={18} /> Scanner un autre livre
       </button>
     </div>
   );
 }
 
+// ── Page principale ───────────────────────────────────────────────────────────
 type Phase = 'scan' | 'emprunt' | 'retour' | 'success';
 
 export default function ScanPage() {
@@ -540,7 +539,7 @@ export default function ScanPage() {
   const [loan, setLoan]             = useState<Loan | null>(null);
   const [successMsg, setSuccessMsg] = useState('');
   const [scanError, setScanError]   = useState('');
-  const [, setScanning] = useState(false);
+  const [, setScanning]             = useState(false);
 
   const handleScan = async (qrToken: string) => {
     setScanning(true);
@@ -548,16 +547,17 @@ export default function ScanPage() {
     try {
       const foundBook = await booksService.getBookByQrToken(qrToken);
       setBook(foundBook);
-
       if (foundBook.status === 'AVAILABLE') {
         setPhase('emprunt');
       } else {
-        const activeLoan = foundBook.currentLoan ??
-          foundBook.loans?.find(l => l.status === 'ACTIVE' || l.status === 'LATE') ?? null;
+        const activeLoan =
+          foundBook.currentLoan ??
+          foundBook.loans?.find(l => l.status === 'ACTIVE' || l.status === 'LATE') ??
+          null;
         setLoan(activeLoan);
         setPhase('retour');
       }
-    } catch (err: any) {
+    } catch {
       setScanError(`Livre introuvable pour le code : ${qrToken}`);
     } finally {
       setScanning(false);
@@ -586,10 +586,9 @@ export default function ScanPage() {
           <button onClick={() => setScanError('')}>✕</button>
         </div>
       )}
-
       {phase === 'scan'    && <ScanFrame onScan={handleScan} />}
       {phase === 'emprunt' && book && <EmpruntForm book={book} onBack={reset} onSuccess={handleSuccess} />}
-      {phase === 'retour'  && book && <RetourForm book={book} loan={loan} onBack={reset} onSuccess={handleSuccess} />}
+      {phase === 'retour'  && book && <RetourForm  book={book} loan={loan} onBack={reset} onSuccess={handleSuccess} />}
       {phase === 'success' && <SuccessScreen message={successMsg} onReset={reset} />}
     </div>
   );

@@ -1,21 +1,45 @@
 import prisma from "../../config/prisma";
 
 export class ReservationRepository {
+
+  // ✅ Inclut classroom + school pour pouvoir vérifier la même classe/école
   findBookByQrForTeacher(teacherId: string, qrToken: string) {
     return prisma.book.findFirst({
       where: { qrToken, classroom: { school: { teacherId } } },
-      select: { id: true, title: true, qrToken: true, status: true },
+      select: {
+        id: true, title: true, qrToken: true, status: true,
+        classroom: {
+          select: {
+            id: true, name: true,
+            school: { select: { id: true, name: true } },
+          },
+        },
+      },
     });
   }
 
+  // ✅ Inclut classroom + school pour pouvoir vérifier la même classe/école
   findStudentForTeacher(teacherId: string, studentId: string) {
     return prisma.student.findFirst({
       where: { id: studentId, classroom: { school: { teacherId } } },
-      select: { id: true, firstName: true, lastName: true },
+      select: {
+        id: true, firstName: true, lastName: true,
+        classroom: {
+          select: {
+            id: true, name: true,
+            school: { select: { id: true, name: true } },
+          },
+        },
+      },
     });
   }
 
-  createReservation(params: { teacherId: string; bookId: string; studentId: string; desiredFrom?: Date | null }) {
+  createReservation(params: {
+    teacherId: string;
+    bookId: string;
+    studentId: string;
+    desiredFrom?: Date | null;
+  }) {
     return prisma.reservation.create({
       data: {
         teacherId: params.teacherId,

@@ -18,7 +18,40 @@ dotenv.config();
 
 const app = express();
 
-app.use(cors());
+// ─── CORS ─────────────────────────────────────────────────────────────────────
+const corsOptions: cors.CorsOptions = {
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+
+    const allowed = [
+      "http://localhost:5173",
+      "http://localhost:4173",
+      process.env.FRONTEND_URL,
+    ].filter(Boolean) as string[];
+
+    if (allowed.includes(origin)) return callback(null, true);
+
+    // IP réseau local → tests mobile sur WiFi
+    const isLocalNetwork = /^https?:\/\/(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/
+      .test(origin);
+    if (isLocalNetwork) return callback(null, true);
+
+    // Tunnel ngrok
+    if (origin.includes("ngrok")) return callback(null, true);
+
+    callback(new Error(`CORS bloqué pour : ${origin}`));
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
+
+app.use(cors(corsOptions));
+
+// ✅ Fix Express 5 : "/{*path}" au lieu de "*"
+app.options("/{*path}", cors(corsOptions));
+// ──────────────────────────────────────────────────────────────────────────────
+
 app.use(express.json());
 
 // public
@@ -30,15 +63,15 @@ app.get("/health", (_req, res) => {
 
 // protected
 app.use("/api/schools", requireAuth, schoolRoutes);
-app.use("/api/schools", requireAuth, classroomRoutes);  // Pour /api/schools/:schoolId/classrooms
-app.use("/api", requireAuth, classroomRoutes);          // ← AJOUTEZ CETTE LIGNE
-app.use("/api", requireAuth, studentRoutes);
-app.use("/api", requireAuth, bookRoutes);
-app.use("/api", requireAuth, loanRoutes);
-app.use("/api", requireAuth, reservationRoutes);
-app.use("/api", requireAuth, qrcodeRoutes);
-app.use("/api", requireAuth, statsRoutes);
-app.use("/api", requireAuth, classScheduleRoutes);
+app.use("/api/schools", requireAuth, classroomRoutes);
+app.use("/api",         requireAuth, classroomRoutes);
+app.use("/api",         requireAuth, studentRoutes);
+app.use("/api",         requireAuth, bookRoutes);
+app.use("/api",         requireAuth, loanRoutes);
+app.use("/api",         requireAuth, reservationRoutes);
+app.use("/api",         requireAuth, qrcodeRoutes);
+app.use("/api",         requireAuth, statsRoutes);
+app.use("/api",         requireAuth, classScheduleRoutes);
 
 // error handler LAST
 app.use(errorHandler);

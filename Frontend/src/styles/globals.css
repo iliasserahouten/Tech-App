@@ -8,15 +8,32 @@
   box-sizing: border-box;
 }
 
+html {
+  /* Empêche le zoom sur double-tap iOS */
+  touch-action: manipulation;
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Empêche le scroll horizontal sur mobile */
+  overflow-x: hidden;
+}
+
+/* Tous les boutons : pas de highlight bleu au tap sur mobile */
+button {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* Inputs : empêche le zoom automatique iOS (taille min 16px) */
+input, select, textarea {
+  font-size: 16px !important;
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
 }

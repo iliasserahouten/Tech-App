@@ -17,7 +17,7 @@ export class ReservationService {
   constructor(private repo = new ReservationRepository()) {}
 
   async create(teacherId: string, dto: CreateReservationDto) {
-    if (!dto.qrToken?.trim()) throw new AppError("qrToken is required", 400);
+    if (!dto.qrToken?.trim())   throw new AppError("qrToken is required", 400);
     if (!dto.studentId?.trim()) throw new AppError("studentId is required", 400);
 
     const book = await this.repo.findBookByQrForTeacher(teacherId, dto.qrToken.trim());
@@ -26,11 +26,22 @@ export class ReservationService {
     const student = await this.repo.findStudentForTeacher(teacherId, dto.studentId.trim());
     if (!student) throw new AppError("Student not found", 404);
 
-    const desiredFrom = dto.desiredFrom ? new Date(dto.desiredFrom) : null;
-    if (dto.desiredFrom && isNaN(desiredFrom!.getTime())) throw new AppError("desiredFrom must be a valid ISO date", 400);
+    // ✅ Même validation que pour les emprunts :
+    // l'élève doit être dans la même classe OU la même école que le livre
+    const sameClassroom = book.classroom.id === student.classroom.id;
+    const sameSchool    = book.classroom.school.id === student.classroom.school.id;
 
-    // Allow reservation anytime for now (MVP). Optionally enforce only when LOANED.
-    // if (book.status !== "LOANED") throw new AppError("Book is not currently loaned", 409);
+    if (!sameClassroom && !sameSchool) {
+      throw new AppError(
+        "L'élève ne peut pas réserver ce livre (classe et école différentes)",
+        403
+      );
+    }
+
+    const desiredFrom = dto.desiredFrom ? new Date(dto.desiredFrom) : null;
+    if (dto.desiredFrom && isNaN(desiredFrom!.getTime())) {
+      throw new AppError("desiredFrom must be a valid ISO date", 400);
+    }
 
     const created = await this.repo.createReservation({
       teacherId,

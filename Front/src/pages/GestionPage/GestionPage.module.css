@@ -1,0 +1,90 @@
+.page { padding: 24px; max-width: 900px; margin: 0 auto; padding-bottom: 100px; }
+.loading { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 300px; gap: 12px; color: #6B7280; }
+.spin { animation: spin 1s linear infinite; }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 8px; }
+.title { font-size: 1.5rem; font-weight: 700; color: #111827; margin: 0; }
+.count { font-size: 0.8rem; color: #9CA3AF; }
+.sectionTitle { display: flex; align-items: center; gap: 8px; font-size: 0.95rem; font-weight: 700; color: #374151; margin: 0; }
+
+/* ── Planning ── */
+.scheduleCard { background: white; border-radius: 14px; padding: 16px; border: 1px solid #E5E7EB; margin-bottom: 20px; }
+.scheduleHeader { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.editScheduleBtn { font-size: 0.8rem; color: #3B82F6; font-weight: 600; background: none; border: none; cursor: pointer; }
+.scheduleGrid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.scheduleDay { background: #F9FAFB; border-radius: 10px; padding: 10px 6px; text-align: center; border: 1px solid #F3F4F6; }
+.scheduleDayActive { background: #EEF2FF; border-color: #C7D2FE; }
+.scheduleDayName { font-size: 0.72rem; font-weight: 700; color: #6B7280; margin: 0 0 4px; text-transform: uppercase; }
+.scheduleDayActive .scheduleDayName { color: #4338CA; }
+.scheduleDayClass { font-size: 0.78rem; font-weight: 600; color: #9CA3AF; margin: 0; }
+.scheduleDayActive .scheduleDayClass { color: #4338CA; }
+
+/* ── Accordion ── */
+.accordion { display: flex; flex-direction: column; gap: 10px; }
+.emptyState { display: flex; flex-direction: column; align-items: center; padding: 48px 0; color: #D1D5DB; gap: 12px; }
+.emptyIcon { opacity: 0.4; }
+
+/* ── School ── */
+.schoolBlock { background: white; border-radius: 14px; border: 1px solid #E5E7EB; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+.schoolRow { display: flex; align-items: center; gap: 12px; padding: 14px 16px; cursor: pointer; transition: background 0.15s; }
+.schoolRow:hover { background: #F9FAFB; }
+.schoolIcon { width: 36px; height: 36px; background: #EEF2FF; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #4338CA; flex-shrink: 0; }
+.schoolInfo { flex: 1; min-width: 0; }
+.schoolName { font-weight: 700; color: #111827; font-size: 0.95rem; margin: 0; }
+.schoolMeta { font-size: 0.78rem; color: #9CA3AF; margin: 2px 0 0; }
+.deleteIconBtn { background: none; border: none; color: #D1D5DB; cursor: pointer; padding: 4px; border-radius: 6px; display: flex; transition: all 0.15s; flex-shrink: 0; }
+.deleteIconBtn:hover { color: #EF4444; background: #FEE2E2; }
+
+/* ── Classrooms ── */
+.classroomsContainer { border-top: 1px solid #F3F4F6; background: #FAFAFA; }
+.emptyClassrooms { font-size: 0.8rem; color: #9CA3AF; padding: 12px 20px; margin: 0; }
+.classroomBlock { border-bottom: 1px solid #F3F4F6; }
+.classroomBlock:last-child { border-bottom: none; }
+.classroomRow { display: flex; align-items: center; gap: 10px; padding: 10px 20px; cursor: pointer; transition: background 0.15s; }
+.classroomRow:hover { background: white; }
+.classroomIcon { width: 28px; height: 28px; background: #F3E8FF; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #7C3AED; flex-shrink: 0; }
+.classroomInfo { flex: 1; min-width: 0; }
+.classroomName { font-weight: 600; color: #374151; font-size: 0.875rem; margin: 0; }
+.classroomMeta { font-size: 0.75rem; color: #9CA3AF; margin: 1px 0 0; }
+
+/* ── Students ── */
+.studentsContainer { background: white; padding: 8px 28px 12px; }
+.emptyStudents { font-size: 0.78rem; color: #9CA3AF; padding: 8px 0; margin: 0; }
+.studentRow { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid #F9FAFB; }
+.studentRow:last-child { border-bottom: none; }
+.studentAvatar { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, #6366F1, #8B5CF6); display: flex; align-items: center; justify-content: center; color: white; font-size: 0.75rem; font-weight: 700; flex-shrink: 0; }
+.studentName { flex: 1; font-size: 0.875rem; color: #374151; margin: 0; }
+.deleteStudentBtn { background: none; border: none; color: #E5E7EB; cursor: pointer; padding: 3px; border-radius: 4px; display: flex; transition: all 0.15s; }
+.deleteStudentBtn:hover { color: #EF4444; }
+
+/* ── FAB ── */
+.fabContainer { position: fixed; bottom: 80px; right: 20px; display: flex; flex-direction: column-reverse; align-items: flex-end; gap: 10px; z-index: 50; }
+@media (min-width: 768px) { .fabContainer { bottom: 24px; right: 24px; } }
+.fab { width: 56px; height: 56px; border-radius: 16px; background: linear-gradient(135deg, #6366F1, #4F46E5); color: white; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 20px rgba(99,102,241,0.4); transition: transform 0.3s; }
+.fab:hover { transform: scale(1.05); }
+.fabOpen { transform: rotate(45deg); }
+.fabMenu { display: flex; flex-direction: column; gap: 6px; }
+.fabMenuItem { display: flex; align-items: center; gap: 10px; background: white; border: 1px solid #E5E7EB; border-radius: 12px; padding: 10px 16px; font-size: 0.875rem; font-weight: 500; color: #374151; cursor: pointer; white-space: nowrap; box-shadow: 0 2px 12px rgba(0,0,0,0.1); transition: all 0.15s; }
+.fabMenuItem:hover { background: #EEF2FF; color: #4338CA; border-color: #C7D2FE; }
+
+/* ── Modales ── */
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 16px; }
+.modal { background: white; border-radius: 16px; width: 100%; max-width: 420px; padding: 24px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+.modalHeader { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.modalHeader h3 { font-size: 1.1rem; font-weight: 700; color: #111827; margin: 0; }
+.closeBtn { background: #F3F4F6; border: none; border-radius: 8px; padding: 6px; cursor: pointer; display: flex; color: #6B7280; }
+.closeBtn:hover { background: #E5E7EB; }
+.form { display: flex; flex-direction: column; gap: 14px; }
+.formGroup { display: flex; flex-direction: column; gap: 6px; }
+.formGroup label { font-size: 0.82rem; font-weight: 600; color: #374151; }
+.formGroup input, .formGroup select { padding: 10px 12px; border: 1px solid #E5E7EB; border-radius: 8px; font-size: 0.9rem; background: #F9FAFB; outline: none; }
+.formGroup input:focus, .formGroup select:focus { border-color: #6366F1; background: white; box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+.submitBtn { padding: 12px; background: #3B82F6; color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+.submitBtn:hover:not(:disabled) { background: #2563EB; }
+.submitBtn:disabled { opacity: 0.6; cursor: not-allowed; }
+.formError { display: flex; align-items: center; gap: 8px; background: #FEE2E2; color: #DC2626; padding: 10px 12px; border-radius: 8px; font-size: 0.85rem; margin-bottom: 4px; }
+.scheduleHint { font-size: 0.82rem; color: #6B7280; margin: -12px 0 8px; }
+.searchWrapper { position: relative; margin-bottom: 16px; }
+.searchIcon    { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #9CA3AF; }
+.searchInput   { width: 100%; padding: 10px 12px 10px 36px; border: 1px solid #E5E7EB; border-radius: 10px; font-size: 0.9rem; outline: none; box-sizing: border-box; background: white; }
+.searchInput:focus { border-color: #6366F1; box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }

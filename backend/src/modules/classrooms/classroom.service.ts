@@ -11,6 +11,7 @@ function toDto(c: any): ClassroomResponseDto {
     name: c.name,
     grade: c.grade,
     schoolId: c.schoolId,
+    schoolName: c.school?.name ?? null,
     createdAt: c.createdAt.toISOString(),
     updatedAt: c.updatedAt.toISOString(),
   };
@@ -36,7 +37,6 @@ export class ClassroomService {
   }
 
   async getMyClassrooms(teacherId: string) {
-    // Récupérer toutes les classes de l'enseignant via ses écoles
     const schools = await prisma.school.findMany({
       where: { teacherId },
       include: {
@@ -49,12 +49,16 @@ export class ClassroomService {
               },
             },
           },
+          orderBy: { name: "asc" },
         },
       },
+      orderBy: { name: "asc" },
     });
 
-    // Aplatir toutes les classes
-    const classrooms = schools.flatMap(school => school.classrooms);
+    // Aplatir toutes les classes en incluant le nom de l'école
+    const classrooms = schools.flatMap(school =>
+      school.classrooms.map(c => ({ ...c, school: { name: school.name } }))
+    );
     return classrooms.map(toDto);
   }
 

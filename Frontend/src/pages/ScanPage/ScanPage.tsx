@@ -69,7 +69,6 @@ function ScanFrame({ onScan }: { onScan: (code: string) => void }) {
         <p>Scannez le QR code ou saisissez le code manuellement</p>
       </div>
 
-      {/* Zone caméra — html5-qrcode gère tout ici */}
       <div
         id="qr-reader"
         style={{
@@ -83,7 +82,6 @@ function ScanFrame({ onScan }: { onScan: (code: string) => void }) {
         }}
       />
 
-      {/* Placeholder quand caméra inactive */}
       {!cameraActive && (
         <div className={styles.viewfinder}>
           <div className={styles.viewfinderInner}>
@@ -98,14 +96,12 @@ function ScanFrame({ onScan }: { onScan: (code: string) => void }) {
         </div>
       )}
 
-      {/* Erreur caméra */}
       {cameraError && (
         <div className={styles.cameraError}>
           <AlertTriangle size={14} /> {cameraError}
         </div>
       )}
 
-      {/* Bouton activer/désactiver caméra */}
       <button
         className={`${styles.cameraBtn} ${cameraActive ? styles.cameraBtnActive : ''}`}
         onClick={cameraActive ? stopCamera : startCamera}
@@ -114,7 +110,6 @@ function ScanFrame({ onScan }: { onScan: (code: string) => void }) {
         {cameraActive ? 'Arrêter la caméra' : 'Activer la caméra'}
       </button>
 
-      {/* Saisie manuelle */}
       <div className={styles.manualSection}>
         <p className={styles.manualLabel}>
           <Keyboard size={14} />
@@ -144,7 +139,7 @@ function EmpruntForm({
   onSuccess: (msg: string) => void;
 }) {
   const [allClassrooms, setAllClassrooms]         = useState<Classroom[]>([]);
-  const [selectedClassroomId, setSelectedClassroomId] = useState(book.classroomId);
+  const [selectedClassroomId, setSelectedClassroomId] = useState('');
   const [students, setStudents]                   = useState<Student[]>([]);
   const [studentId, setStudentId]                 = useState('');
   const [dueAt, setDueAt]                         = useState(addDays(15));
@@ -154,8 +149,20 @@ function EmpruntForm({
 
   // Charger toutes les classes au montage
   useEffect(() => {
-    classroomsService.getMyClassrooms().then(cls => {
+    Promise.all([
+      classroomsService.getMyClassrooms(),
+      classroomsService.getTodayClassroom(),
+    ]).then(([cls, todayClass]) => {
       setAllClassrooms(cls);
+      if (cls.length > 0) {
+        // Priorité : classe du jour > première classe
+        // On n'utilise PAS book.classroomId car le livre appartient à une classe
+        // mais l'élève peut être dans n'importe quelle classe
+        const defaultId = todayClass
+          ? cls.find(c => c.id === todayClass.id)?.id ?? cls[0].id
+          : cls[0].id;
+        setSelectedClassroomId(defaultId);
+      }
     }).catch(() => {});
   }, []);
 
@@ -225,7 +232,7 @@ function EmpruntForm({
           >
             {allClassrooms.map(c => (
               <option key={c.id} value={c.id}>
-                {c.name}{c.grade ? ` - ${c.grade}` : ''}
+                {c.schoolName ? `[${c.schoolName}] ` : ''}{c.name}{c.grade ? ` - ${c.grade}` : ''}
               </option>
             ))}
           </select>
@@ -308,7 +315,6 @@ function RetourForm({
   const [desiredFrom, setDesiredFrom]       = useState(addDays(1));
   const isLate = loan?.status === 'LATE';
 
-  // Charger les classes quand on ouvre le formulaire de réservation
   useEffect(() => {
     if (!showReservation) return;
     classroomsService.getMyClassrooms().then(cls => {
@@ -317,7 +323,6 @@ function RetourForm({
     }).catch(() => {});
   }, [showReservation]);
 
-  // Charger les élèves quand la classe change
   useEffect(() => {
     if (!selectedClassroomId) return;
     setLoadingStudents(true);
@@ -347,11 +352,11 @@ function RetourForm({
     setLoading(true);
     setError('');
     try {
-await booksService.createReservation({
-  qrToken: book.qrToken,  // ← qrToken au lieu de bookId
-  studentId,
-  desiredFrom,
-});
+      await booksService.createReservation({
+        qrToken: book.qrToken,
+        studentId,
+        desiredFrom,
+      });
       const student = students.find(s => s.id === studentId);
       onSuccess(`Réservation créée pour ${student?.firstName} ${student?.lastName}`);
     } catch (err: any) {
@@ -432,7 +437,6 @@ await booksService.createReservation({
           {error && <div className={styles.errorBox}><AlertTriangle size={16} />{error}</div>}
 
           <div className={styles.formSection}>
-            {/* Classe */}
             <div className={styles.formGroup}>
               <label className={styles.formLabel}>
                 <Users size={14} /> Classe
@@ -444,13 +448,12 @@ await booksService.createReservation({
               >
                 {allClassrooms.map(c => (
                   <option key={c.id} value={c.id}>
-                    {c.name}{c.grade ? ` - ${c.grade}` : ''}
+                    {c.schoolName ? `[${c.schoolName}] ` : ''}{c.name}{c.grade ? ` - ${c.grade}` : ''}
                   </option>
                 ))}
               </select>
             </div>
 
-            {/* Élève */}
             <div className={styles.formGroup}>
               <label className={styles.formLabel}>
                 <User size={14} /> Élève
@@ -477,7 +480,6 @@ await booksService.createReservation({
               )}
             </div>
 
-            {/* Date souhaitée */}
             <div className={styles.formGroup}>
               <label className={styles.formLabel}>
                 <Calendar size={14} /> Date souhaitée (optionnel)
@@ -513,7 +515,7 @@ await booksService.createReservation({
     </div>
   );
 }
-// ── Phase 3 : Succès ──
+
 function SuccessScreen({ message, onReset }: { message: string; onReset: () => void }) {
   return (
     <div className={styles.successPage}>
@@ -530,7 +532,6 @@ function SuccessScreen({ message, onReset }: { message: string; onReset: () => v
   );
 }
 
-// ── Page principale ──
 type Phase = 'scan' | 'emprunt' | 'retour' | 'success';
 
 export default function ScanPage() {
@@ -539,7 +540,7 @@ export default function ScanPage() {
   const [loan, setLoan]             = useState<Loan | null>(null);
   const [successMsg, setSuccessMsg] = useState('');
   const [scanError, setScanError]   = useState('');
-  const [scanning, setScanning]     = useState(false);
+  const [, setScanning] = useState(false);
 
   const handleScan = async (qrToken: string) => {
     setScanning(true);

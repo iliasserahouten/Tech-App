@@ -3,6 +3,7 @@ export type ClassroomResponseDto = {
   name: string;
   grade: string | null;
   schoolId: string;
+  schoolName: string | null;
   createdAt: string;
   updatedAt: string;
 };

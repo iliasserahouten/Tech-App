@@ -1,24 +1,29 @@
 import { PrismaClient, BookStatus, LoanStatus, DayOfWeek } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { Pool } from 'pg';
 import bcrypt from 'bcrypt';
+import 'dotenv/config';
 
-const prisma = new PrismaClient();
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
 
 async function main() {
   console.log('🌱 Début du seed...');
 
-  // ── Nettoyage dans l'ordre des dépendances ──
   await prisma.reservation.deleteMany();
   await prisma.loan.deleteMany();
   await prisma.book.deleteMany();
   await prisma.classSchedule.deleteMany();
+  await prisma.teacherClassroom.deleteMany();
   await prisma.student.deleteMany();
   await prisma.classroom.deleteMany();
   await prisma.school.deleteMany();
   console.log('🧹 Base nettoyée');
 
-  // ── User (mot de passe: demo1234) ──
   const passwordHash = await bcrypt.hash('demo1234', 10);
-
   const user = await prisma.user.upsert({
     where: { email: 'demo@bibliotheque.fr' },
     update: {},
@@ -31,7 +36,6 @@ async function main() {
   });
   console.log(`✅ User créé : ${user.email}`);
 
-  // ── Schools ──
   const schoolFerry = await prisma.school.create({
     data: { name: 'École Jules Ferry', city: 'Paris', teacherId: user.id },
   });
@@ -40,7 +44,6 @@ async function main() {
   });
   console.log('✅ Écoles créées');
 
-  // ── Classrooms ──
   const cpA = await prisma.classroom.create({
     data: { name: 'CP A', grade: 'CP', schoolId: schoolFerry.id },
   });
@@ -55,7 +58,16 @@ async function main() {
   });
   console.log('✅ Classes créées');
 
-  // ── ClassSchedules (Smart Filter) ──
+  await prisma.teacherClassroom.createMany({
+    data: [
+      { teacherId: user.id, classroomId: cpA.id  },
+      { teacherId: user.id, classroomId: ce1B.id },
+      { teacherId: user.id, classroomId: cm1A.id },
+      { teacherId: user.id, classroomId: cm2B.id },
+    ],
+  });
+  console.log('✅ Liaisons enseignant-classes créées');
+
   await prisma.classSchedule.createMany({
     data: [
       { dayOfWeek: DayOfWeek.MONDAY,    classroomId: cpA.id,  teacherId: user.id },
@@ -67,7 +79,6 @@ async function main() {
   });
   console.log('✅ Planning créé');
 
-  // ── Students ──
   const [lucas, emma, noah, lea, tom, ines, louis, jade] = await Promise.all([
     prisma.student.create({ data: { firstName: 'Lucas', lastName: 'Martin',  classroomId: cpA.id  } }),
     prisma.student.create({ data: { firstName: 'Emma',  lastName: 'Bernard', classroomId: cpA.id  } }),
@@ -80,60 +91,54 @@ async function main() {
   ]);
   console.log('✅ Élèves créés');
 
-  // ── Books ──
   const [petitPrince, charlotteWeb, harryPotter, matilda, miserables, voyage, lion, james] =
     await Promise.all([
-      prisma.book.create({ data: { title: "Le Petit Prince",               universe: "Classiques",  publisher: "Gallimard",     status: BookStatus.AVAILABLE, qrToken: "LIV-0001", classroomId: cpA.id  } }),
-      prisma.book.create({ data: { title: "Charlotte's Web",               universe: "Jeunesse",    publisher: "HarperCollins", status: BookStatus.LOANED,    qrToken: "LIV-0002", classroomId: cpA.id  } }),
-      prisma.book.create({ data: { title: "Harry Potter T1",               universe: "Fantastique", publisher: "Gallimard",     status: BookStatus.LOANED,    qrToken: "LIV-0003", classroomId: ce1B.id } }),
-      prisma.book.create({ data: { title: "Matilda",                       universe: "Jeunesse",    publisher: "Gallimard",     status: BookStatus.AVAILABLE, qrToken: "LIV-0004", classroomId: ce1B.id } }),
-      prisma.book.create({ data: { title: "Les Misérables (abrégé)",       universe: "Classiques",  publisher: "Hachette",      status: BookStatus.AVAILABLE, qrToken: "LIV-0005", classroomId: cm1A.id } }),
-      prisma.book.create({ data: { title: "Voyage au Centre de la Terre",  universe: "Aventure",    publisher: "Hetzel",        status: BookStatus.AVAILABLE, qrToken: "LIV-0006", classroomId: cm1A.id } }),
-      prisma.book.create({ data: { title: "Le Lion et la Sorcière Blanche",universe: "Fantastique", publisher: "Gallimard",     status: BookStatus.RESERVED,  qrToken: "LIV-0007", classroomId: cm2B.id } }),
-      prisma.book.create({ data: { title: "James et la Grosse Pêche",      universe: "Jeunesse",    publisher: "Gallimard",     status: BookStatus.AVAILABLE, qrToken: "LIV-0008", classroomId: cm2B.id } }),
+      prisma.book.create({ data: { title: "Le Petit Prince",                universe: "Classiques",  publisher: "Gallimard",     status: BookStatus.AVAILABLE, qrToken: "LIV-0001", classroomId: cpA.id  } }),
+      prisma.book.create({ data: { title: "Charlotte's Web",                universe: "Jeunesse",    publisher: "HarperCollins", status: BookStatus.LOANED,    qrToken: "LIV-0002", classroomId: cpA.id  } }),
+      prisma.book.create({ data: { title: "Harry Potter T1",                universe: "Fantastique", publisher: "Gallimard",     status: BookStatus.LOANED,    qrToken: "LIV-0003", classroomId: ce1B.id } }),
+      prisma.book.create({ data: { title: "Matilda",                        universe: "Jeunesse",    publisher: "Gallimard",     status: BookStatus.AVAILABLE, qrToken: "LIV-0004", classroomId: ce1B.id } }),
+      prisma.book.create({ data: { title: "Les Misérables (abrégé)",        universe: "Classiques",  publisher: "Hachette",      status: BookStatus.AVAILABLE, qrToken: "LIV-0005", classroomId: cm1A.id } }),
+      prisma.book.create({ data: { title: "Voyage au Centre de la Terre",   universe: "Aventure",    publisher: "Hetzel",        status: BookStatus.AVAILABLE, qrToken: "LIV-0006", classroomId: cm1A.id } }),
+      prisma.book.create({ data: { title: "Le Lion et la Sorcière Blanche", universe: "Fantastique", publisher: "Gallimard",     status: BookStatus.RESERVED,  qrToken: "LIV-0007", classroomId: cm2B.id } }),
+      prisma.book.create({ data: { title: "James et la Grosse Pêche",       universe: "Jeunesse",    publisher: "Gallimard",     status: BookStatus.AVAILABLE, qrToken: "LIV-0008", classroomId: cm2B.id } }),
     ]);
   console.log('✅ Livres créés');
 
-  // ── Loans ──
   const now = new Date();
-  const daysAgo = (n: number) => new Date(now.getTime() - n * 86400000);
+  const daysAgo  = (n: number) => new Date(now.getTime() - n * 86400000);
   const daysFrom = (n: number) => new Date(now.getTime() + n * 86400000);
 
   await prisma.loan.createMany({
     data: [
-      // Emprunt actif — Charlotte's Web par Lucas
       {
-        status:     LoanStatus.ACTIVE,
+        status: LoanStatus.ACTIVE,
         borrowedAt: daysAgo(10),
-        dueAt:      daysFrom(5),
-        bookId:     charlotteWeb.id,
-        studentId:  lucas.id,
-        teacherId:  user.id,
+        dueAt: daysFrom(5),
+        bookId: charlotteWeb.id,
+        studentId: lucas.id,
+        teacherId: user.id,
       },
-      // Emprunt en retard — Harry Potter par Noah
       {
-        status:     LoanStatus.LATE,
+        status: LoanStatus.LATE,
         borrowedAt: daysAgo(30),
-        dueAt:      daysAgo(10),
-        bookId:     harryPotter.id,
-        studentId:  noah.id,
-        teacherId:  user.id,
+        dueAt: daysAgo(10),
+        bookId: harryPotter.id,
+        studentId: noah.id,
+        teacherId: user.id,
       },
-      // Emprunt retourné — Le Petit Prince par Emma
       {
-        status:     LoanStatus.RETURNED,
+        status: LoanStatus.RETURNED,
         borrowedAt: daysAgo(20),
-        dueAt:      daysAgo(5),
+        dueAt: daysAgo(5),
         returnedAt: daysAgo(6),
-        bookId:     petitPrince.id,
-        studentId:  emma.id,
-        teacherId:  user.id,
+        bookId: petitPrince.id,
+        studentId: emma.id,
+        teacherId: user.id,
       },
     ],
   });
   console.log('✅ Emprunts créés');
 
-  // ── Reservation ──
   await prisma.reservation.create({
     data: {
       bookId:      lion.id,
@@ -158,4 +163,5 @@ main()
   })
   .finally(async () => {
     await prisma.$disconnect();
+    await pool.end();
   });

@@ -1,0 +1,86 @@
+/* ── Layout ── */
+.page    { padding: 24px; max-width: 1100px; margin: 0 auto; }
+.loading { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 300px; gap: 12px; color: #6B7280; }
+.spin    { animation: spin 1s linear infinite; }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.errorBox { display: flex; align-items: center; gap: 8px; background: #FEE2E2; color: #DC2626; padding: 14px 18px; border-radius: 10px; margin: 24px; }
+
+/* ── En-tête ── */
+.header      { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 8px; }
+.titleGroup  { display: flex; align-items: center; gap: 10px; }
+.titleIcon   { color: #6366F1; }
+.title       { font-size: 1.5rem; font-weight: 700; color: #111827; margin: 0; }
+.subtitle    { font-size: 0.875rem; color: #9CA3AF; margin: 0; }
+
+/* ── Stats ── */
+.statsRow   { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+.statCard   { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 12px; }
+.statAll      { background: #F3F4F6; color: #374151; }
+.statActive   { background: #EFF6FF; color: #1D4ED8; }
+.statReturned { background: #D1FAE5; color: #065F46; }
+.statLate     { background: #FEF3C7; color: #92400E; }
+.statValue  { font-size: 1.4rem; font-weight: 700; line-height: 1; margin: 0; }
+.statLabel  { font-size: 0.72rem; font-weight: 500; margin: 2px 0 0; opacity: 0.75; }
+
+/* ── Filtres ── */
+.filtersBox   { background: white; border: 1px solid #E5E7EB; border-radius: 12px; padding: 16px; margin-bottom: 14px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+.filtersTitle { display: flex; align-items: center; gap: 6px; font-size: 0.82rem; font-weight: 600; color: #6B7280; text-transform: uppercase; letter-spacing: 0.05em; }
+.resetBtn     { display: flex; align-items: center; gap: 4px; margin-left: auto; background: #FEE2E2; color: #DC2626; border: none; border-radius: 6px; padding: 3px 8px; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
+.resetBtn:hover { background: #FECACA; }
+
+.searchWrapper { position: relative; }
+.searchIcon    { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #9CA3AF; }
+.searchInput   { width: 100%; padding: 9px 12px 9px 34px; border: 1px solid #E5E7EB; border-radius: 8px; font-size: 0.875rem; outline: none; box-sizing: border-box; }
+.searchInput:focus { border-color: #6366F1; box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+
+.filterRow      { display: flex; gap: 10px; flex-wrap: wrap; }
+.selectWrapper  { position: relative; flex: 1; min-width: 160px; }
+.select         { width: 100%; padding: 8px 30px 8px 12px; border: 1px solid #E5E7EB; border-radius: 8px; font-size: 0.85rem; appearance: none; background: white; cursor: pointer; outline: none; }
+.select:focus   { border-color: #6366F1; }
+.chevron        { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: #9CA3AF; pointer-events: none; }
+
+.count { font-size: 0.8rem; color: #9CA3AF; font-weight: 500; margin-bottom: 10px; }
+
+/* ── Tableau ── */
+.table   { display: flex; flex-direction: column; gap: 0; border: 1px solid #E5E7EB; border-radius: 12px; overflow: hidden; background: white; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+
+.row     { display: grid; grid-template-columns: 2fr 1.4fr 0.9fr 1fr 1fr 1fr 0.9fr; align-items: center; gap: 12px; padding: 12px 16px; }
+.rowHead { background: #F9FAFB; border-bottom: 1px solid #E5E7EB; font-size: 0.72rem; font-weight: 700; color: #6B7280; text-transform: uppercase; letter-spacing: 0.05em; }
+.rowData { border-bottom: 1px solid #F3F4F6; font-size: 0.85rem; color: #374151; transition: background 0.1s; }
+.rowData:last-child { border-bottom: none; }
+.rowData:hover { background: #F9FAFB; }
+.rowLate { background: #FFFBEB; }
+.rowLate:hover { background: #FEF3C7; }
+
+/* ── Colonnes ── */
+.colBook    { display: flex; align-items: flex-start; gap: 8px; }
+.colStudent { display: flex; align-items: center; gap: 6px; }
+.colClass   { color: #6B7280; font-size: 0.82rem; }
+.colDate    { display: flex; align-items: center; gap: 4px; color: #4B5563; font-size: 0.82rem; }
+.colStatus  { display: flex; }
+
+.rowIcon  { color: #9CA3AF; flex-shrink: 0; margin-top: 2px; }
+.dateIcon { color: #C4B5FD; flex-shrink: 0; }
+
+.bookTitle { font-weight: 600; color: #111827; margin: 0; line-height: 1.2; }
+.bookSub   { font-size: 0.75rem; color: #9CA3AF; margin: 2px 0 0; }
+
+/* ── Badges ── */
+.badge        { display: inline-flex; align-items: center; gap: 4px; font-size: 0.72rem; font-weight: 600; padding: 3px 8px; border-radius: 20px; white-space: nowrap; }
+.badgeActive   { background: #DBEAFE; color: #1D4ED8; }
+.badgeReturned { background: #D1FAE5; color: #065F46; }
+.badgeLate     { background: #FEF3C7; color: #92400E; }
+
+/* ── Empty ── */
+.empty      { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; gap: 12px; }
+.emptyIcon  { color: #E5E7EB; }
+.emptyTitle { font-weight: 600; color: #374151; margin: 0; }
+.emptyText  { font-size: 0.875rem; color: #9CA3AF; margin: 0; text-align: center; }
+
+/* ── Responsive ── */
+@media (max-width: 800px) {
+  .statsRow { grid-template-columns: repeat(2, 1fr); }
+  .row      { grid-template-columns: 1fr; }
+  .rowHead  { display: none; }
+  .rowData  { display: flex; flex-direction: column; gap: 6px; padding: 14px 16px; border-radius: 0; }
+}

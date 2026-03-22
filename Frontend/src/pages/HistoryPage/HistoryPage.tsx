@@ -215,7 +215,7 @@ export default function HistoryPage() {
             >
               <option value="">Toutes les classes</option>
               {classrooms.map(c => (
-                <option key={c.id} value={c.id}>{c.school?.name} — {c.name}</option>
+                <option key={c.id} value={c.id}>{c.schoolName ?? c.school?.name} — {c.name}</option>
               ))}
             </select>
             <ChevronDown size={14} className={styles.chevron} />

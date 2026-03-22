@@ -10,6 +10,9 @@ export class LoanRepository {
   findStudentForTeacher(teacherId: string, studentId: string) {
     return prisma.student.findFirst({
       where: { id: studentId, classroom: { school: { teacherId } } },
+      include: {
+        classroom: { select: { id: true, name: true } },
+      },
     });
   }
 
@@ -30,8 +33,19 @@ export class LoanRepository {
         status: "ACTIVE",
       },
       include: {
-        book: { select: { id: true, title: true, qrToken: true } },
-        student: { select: { id: true, firstName: true, lastName: true } },
+        book: {
+          select: {
+            id: true, title: true, qrToken: true,
+            classroom: { select: { id: true, name: true } },
+          },
+        },
+        student: {
+          select: {
+            id: true, firstName: true, lastName: true,
+            // ✅ classe de l'élève incluse dans la réponse
+            classroom: { select: { id: true, name: true } },
+          },
+        },
       },
     });
   }
@@ -44,8 +58,18 @@ export class LoanRepository {
         returnedAt: params.returnedAt,
       },
       include: {
-        book: { select: { id: true, title: true, qrToken: true } },
-        student: { select: { id: true, firstName: true, lastName: true } },
+        book: {
+          select: {
+            id: true, title: true, qrToken: true,
+            classroom: { select: { id: true, name: true } },
+          },
+        },
+        student: {
+          select: {
+            id: true, firstName: true, lastName: true,
+            classroom: { select: { id: true, name: true } },
+          },
+        },
       },
     });
   }
@@ -62,49 +86,61 @@ export class LoanRepository {
       where: { bookId, teacherId },
       orderBy: { borrowedAt: "desc" },
       include: {
-        book: { select: { id: true, title: true, qrToken: true } },
-        student: { select: { id: true, firstName: true, lastName: true } },
+        book: {
+          select: {
+            id: true, title: true, qrToken: true,
+            classroom: { select: { id: true, name: true } },
+          },
+        },
+        student: {
+          select: {
+            id: true, firstName: true, lastName: true,
+            classroom: { select: { id: true, name: true } },
+          },
+        },
       },
     });
   }
 
-  // Ensure the book belongs to teacher (for history endpoint)
   findBookByIdForTeacher(teacherId: string, bookId: string) {
     return prisma.book.findFirst({
       where: { id: bookId, classroom: { school: { teacherId } } },
       select: { id: true },
     });
   }
+
   listAllLoans(teacherId: string, filters: {
-  status?: string;
-  studentId?: string;
-  bookId?: string;
-  classroomId?: string;
-}) {
-  const where: any = { teacherId };
+    status?: string;
+    studentId?: string;
+    bookId?: string;
+    classroomId?: string;
+  }) {
+    const where: any = { teacherId };
 
-  if (filters.status)      where.status    = filters.status;
-  if (filters.studentId)   where.studentId = filters.studentId;
-  if (filters.bookId)      where.bookId    = filters.bookId;
-  if (filters.classroomId) where.book      = { classroomId: filters.classroomId };
+    if (filters.status)      where.status    = filters.status;
+    if (filters.studentId)   where.studentId = filters.studentId;
+    if (filters.bookId)      where.bookId    = filters.bookId;
+    // ✅ filtre sur la classe de l'ÉLÈVE, pas la classe du livre
+    if (filters.classroomId) where.student   = { classroomId: filters.classroomId };
 
-  return prisma.loan.findMany({
-    where,
-    orderBy: { borrowedAt: "desc" },
-    include: {
-      book: {
-        select: {
-          id: true, title: true, qrToken: true, universe: true, publisher: true,
-          classroom: { select: { id: true, name: true, school: { select: { id: true, name: true } } } },
+    return prisma.loan.findMany({
+      where,
+      orderBy: { borrowedAt: "desc" },
+      include: {
+        book: {
+          select: {
+            id: true, title: true, qrToken: true, universe: true, publisher: true,
+            classroom: { select: { id: true, name: true, school: { select: { id: true, name: true } } } },
+          },
+        },
+        student: {
+          select: {
+            id: true, firstName: true, lastName: true,
+            // ✅ classe de l'élève — c'est ça qui s'affiche dans l'historique
+            classroom: { select: { id: true, name: true } },
+          },
         },
       },
-      student: {
-        select: {
-          id: true, firstName: true, lastName: true,
-          classroom: { select: { id: true, name: true } }
-        }
-      },
-    },
-  });
-}
+    });
+  }
 }

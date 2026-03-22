@@ -5,6 +5,7 @@ interface AuthState {
   user: User | null;
   token: string | null;
   isAuthenticated: boolean;
+  isLoading: boolean;
   login: (token: string, user: User) => void;
   logout: () => void;
   initAuth: () => void;
@@ -14,6 +15,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   token: null,
   isAuthenticated: false,
+  isLoading: false,
 
   login: (token: string, user: User) => {
     localStorage.setItem('token', token);
@@ -28,33 +30,31 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   initAuth: () => {
+    set({ isLoading: true });
     try {
       const token = localStorage.getItem('token');
       const userData = localStorage.getItem('user');
-      
-      // Vérifier que les valeurs existent ET ne sont pas "undefined" (string)
+
       if (token && token !== 'undefined' && userData && userData !== 'undefined') {
         try {
           const user = JSON.parse(userData);
-          set({ user, token, isAuthenticated: true });
+          set({ user, token, isAuthenticated: true, isLoading: false });
         } catch (parseError) {
           console.error('Erreur de parsing du user:', parseError);
-          // Nettoyer les données corrompues
           localStorage.removeItem('token');
           localStorage.removeItem('user');
-          set({ user: null, token: null, isAuthenticated: false });
+          set({ user: null, token: null, isAuthenticated: false, isLoading: false });
         }
       } else {
-        // Nettoyer les données invalides
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        set({ user: null, token: null, isAuthenticated: false });
+        set({ user: null, token: null, isAuthenticated: false, isLoading: false });
       }
     } catch (error) {
       console.error('Erreur dans initAuth:', error);
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      set({ user: null, token: null, isAuthenticated: false });
+      set({ user: null, token: null, isAuthenticated: false, isLoading: false });
     }
   },
 }));

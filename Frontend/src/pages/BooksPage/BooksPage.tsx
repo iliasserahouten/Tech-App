@@ -138,7 +138,7 @@ function AddBookModal({
             >
               {classrooms.map(c => (
                 <option key={c.id} value={c.id}>
-                  {c.name}{c.grade ? ` - ${c.grade}` : ''}
+                  {c.schoolName ? `[${c.schoolName}] ` : ''}{c.name}{c.grade ? ` - ${c.grade}` : ''}
                 </option>
               ))}
             </select>
@@ -165,7 +165,7 @@ function AddBookModal({
 export default function BooksPage() {
   const [books, setBooks]           = useState<Book[]>([]);
   const [classrooms, setClassrooms] = useState<Classroom[]>([]);
-  const [schools, setSchools]       = useState<School[]>([]);
+  const [, setSchools]       = useState<School[]>([]);
   const [loading, setLoading]       = useState(true);
   const [search, setSearch]         = useState('');
   const [filtreClassroom, setFiltreClassroom] = useState('');
@@ -277,7 +277,7 @@ export default function BooksPage() {
               <option value="">Toutes les classes</option>
               {classrooms.map(c => (
                 <option key={c.id} value={c.id}>
-                  {c.name}{c.grade ? ` - ${c.grade}` : ''}
+                  {c.schoolName ? `[${c.schoolName}] ` : ''}{c.name}{c.grade ? ` - ${c.grade}` : ''}
                 </option>
               ))}
             </select>

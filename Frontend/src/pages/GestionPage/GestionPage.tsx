@@ -363,7 +363,8 @@ export default function GestionPage() {
             <div className={styles.formGroup}>
               <label>Classe *</label>
               <select value={fStudent.classroomId} onChange={e => setFStudent({ ...fStudent, classroomId: e.target.value })} required>
-                {classrooms.map(c => <option key={c.id} value={c.id}>{c.name}{c.grade ? ` - ${c.grade}` : ''}</option>)}
+                {classrooms.map(c => <option key={c.id} value={c.id}>{c.schoolName ? `[${c.schoolName}] ` : ''}{c.name}{c.grade ? ` - ${c.grade}` : ''}
+</option>)}
               </select>
             </div>
             <button type="submit" className={styles.submitBtn} disabled={saving}>{saving ? 'Création...' : 'Créer'}</button>
@@ -385,7 +386,8 @@ export default function GestionPage() {
             <div className={styles.formGroup}>
               <label>Classe</label>
               <select value={fSchedule.classroomId} onChange={e => setFSchedule({ ...fSchedule, classroomId: e.target.value })}>
-                {classrooms.map(c => <option key={c.id} value={c.id}>{c.name}{c.grade ? ` - ${c.grade}` : ''}</option>)}
+                {classrooms.map(c => <option key={c.id} value={c.id}>{c.schoolName ? `[${c.schoolName}] ` : ''}{c.name}{c.grade ? ` - ${c.grade}` : ''}
+</option>)}
               </select>
             </div>
             <button className={styles.submitBtn} onClick={addSchedule} disabled={saving}>

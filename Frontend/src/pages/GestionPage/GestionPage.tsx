@@ -33,7 +33,7 @@ export default function GestionPage() {
   const [students,   setStudents]   = useState<Student[]>([]);
   const [schedules,  setSchedules]  = useState<ClassSchedule[]>([]);
   const [loading, setLoading]       = useState(true);
-  const [search, setSearch]         = useState('');  {/* ← NOUVEAU */}
+  const [search, setSearch]         = useState('');
 
   const [openSchools,    setOpenSchools]    = useState<string[]>([]);
   const [openClassrooms, setOpenClassrooms] = useState<string[]>([]);
@@ -61,12 +61,18 @@ export default function GestionPage() {
       setSchools(sc);
       setClassrooms(cl);
       setSchedules(sched);
+
+      // ✅ FIX : initialiser les selects avec la PREMIÈRE valeur disponible
+      // Pour un nouvel utilisateur, sc et cl sont vides → les selects restent vides,
+      // mais le onChange du <select> prendra le relai dès que l'user choisit une valeur.
+      // On initialise uniquement si des données existent déjà.
+      if (sc.length > 0) {
+        setFClassroom(f => ({ ...f, schoolId: sc[0].id }));
+      }
       if (cl.length > 0) {
-        setFClassroom(f => ({ ...f, schoolId: cl[0].schoolId }));
         setFStudent(f => ({ ...f, classroomId: cl[0].id }));
         setFSchedule(f => ({ ...f, classroomId: cl[0].id }));
       }
-      if (sc.length > 0) setFClassroom(f => ({ ...f, schoolId: sc[0].id }));
 
       const allStudents: Student[] = [];
       for (const cls of cl) {
@@ -86,35 +92,88 @@ export default function GestionPage() {
   const toggleSchool    = (id: string) => setOpenSchools(p => p.includes(id) ? p.filter(i => i !== id) : [...p, id]);
   const toggleClassroom = (id: string) => setOpenClassrooms(p => p.includes(id) ? p.filter(i => i !== id) : [...p, id]);
 
+  // ─── ÉCOLE ────────────────────────────────────────────────────────────────
   const addSchool = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true); setFormError('');
     try {
       const s = await schoolsService.createSchool({ name: fSchool.name, city: fSchool.city || undefined });
-      setSchools(p => [...p, s]);
+      setSchools(p => {
+        const updated = [...p, s];
+        // ✅ FIX : si c'est la première école créée, l'utiliser comme valeur par défaut
+        // pour le formulaire de création de classe
+        if (updated.length === 1) {
+          setFClassroom(f => ({ ...f, schoolId: s.id }));
+        }
+        return updated;
+      });
+      // ✅ FIX : toujours mettre à jour schoolId avec l'école qu'on vient de créer
+      // (l'utilisateur voudra probablement créer une classe dans cette école)
+      setFClassroom(f => ({ ...f, schoolId: s.id }));
       setFSchool({ name: '', city: '' });
       setModal(null);
     } catch (err: any) { setFormError(err.response?.data?.message ?? 'Erreur'); }
     finally { setSaving(false); }
   };
 
+  // ─── CLASSE ───────────────────────────────────────────────────────────────
   const addClassroom = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true); setFormError('');
+
+    // ✅ FIX : validation explicite — évite POST /schools//classrooms (URL cassée)
+    if (!fClassroom.schoolId) {
+      setFormError('Veuillez sélectionner une école. Créez d\'abord une école si nécessaire.');
+      setSaving(false);
+      return;
+    }
+
     try {
-      const c = await classroomsService.createClassroom({ name: fClassroom.name, grade: fClassroom.grade || undefined, schoolId: fClassroom.schoolId });
-      setClassrooms(p => [...p, c]);
+      const c = await classroomsService.createClassroom({
+        name: fClassroom.name,
+        grade: fClassroom.grade || undefined,
+        schoolId: fClassroom.schoolId,
+      });
+
+      setClassrooms(p => {
+        const updated = [...p, c];
+        // ✅ FIX : si c'est la première classe créée, l'utiliser comme valeur par défaut
+        // pour les formulaires élève et planning
+        if (updated.length === 1) {
+          setFStudent(f => ({ ...f, classroomId: c.id }));
+          setFSchedule(f => ({ ...f, classroomId: c.id }));
+        }
+        return updated;
+      });
+
+      // ✅ FIX : toujours mettre à jour classroomId avec la classe qu'on vient de créer
+      setFStudent(f => ({ ...f, classroomId: c.id }));
+      setFSchedule(f => ({ ...f, classroomId: c.id }));
+
       setFClassroom(f => ({ ...f, name: '', grade: '' }));
       setModal(null);
     } catch (err: any) { setFormError(err.response?.data?.message ?? 'Erreur'); }
     finally { setSaving(false); }
   };
 
+  // ─── ÉLÈVE ────────────────────────────────────────────────────────────────
   const addStudent = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true); setFormError('');
+
+    // ✅ FIX : validation explicite — évite POST /classrooms//students (URL cassée)
+    if (!fStudent.classroomId) {
+      setFormError('Veuillez sélectionner une classe. Créez d\'abord une classe si nécessaire.');
+      setSaving(false);
+      return;
+    }
+
     try {
-      const s = await studentsService.createStudent({ firstName: fStudent.firstName, lastName: fStudent.lastName, classroomId: fStudent.classroomId });
+      const s = await studentsService.createStudent({
+        firstName: fStudent.firstName,
+        lastName: fStudent.lastName,
+        classroomId: fStudent.classroomId,
+      });
       setStudents(p => [...p, s]);
       setFStudent(f => ({ ...f, firstName: '', lastName: '' }));
       setModal(null);
@@ -122,16 +181,57 @@ export default function GestionPage() {
     finally { setSaving(false); }
   };
 
+  // ─── SUPPRESSION ──────────────────────────────────────────────────────────
   const deleteSchool = async (id: string) => {
     if (!window.confirm('Supprimer cette école et toutes ses classes ?')) return;
-    try { await schoolsService.deleteSchool(id); setSchools(p => p.filter(s => s.id !== id)); }
-    catch { alert('Erreur lors de la suppression'); }
+    try {
+      await schoolsService.deleteSchool(id);
+      setSchools(p => {
+        const updated = p.filter(s => s.id !== id);
+        // Mettre à jour schoolId si on supprime l'école sélectionnée
+        setFClassroom(f => ({
+          ...f,
+          schoolId: f.schoolId === id ? (updated[0]?.id ?? '') : f.schoolId,
+        }));
+        return updated;
+      });
+      // Retirer aussi les classes et élèves orphelins du state local
+      const removedClassroomIds = classrooms.filter(c => c.schoolId === id).map(c => c.id);
+      setClassrooms(p => {
+        const updated = p.filter(c => c.schoolId !== id);
+        setFStudent(f => ({
+          ...f,
+          classroomId: removedClassroomIds.includes(f.classroomId) ? (updated[0]?.id ?? '') : f.classroomId,
+        }));
+        setFSchedule(f => ({
+          ...f,
+          classroomId: removedClassroomIds.includes(f.classroomId) ? (updated[0]?.id ?? '') : f.classroomId,
+        }));
+        return updated;
+      });
+      setStudents(p => p.filter(s => !removedClassroomIds.includes(s.classroomId)));
+    } catch { alert('Erreur lors de la suppression'); }
   };
 
   const deleteClassroom = async (id: string) => {
     if (!window.confirm('Supprimer cette classe et tous ses élèves ?')) return;
-    try { await classroomsService.deleteClassroom(id); setClassrooms(p => p.filter(c => c.id !== id)); }
-    catch { alert('Erreur lors de la suppression'); }
+    try {
+      await classroomsService.deleteClassroom(id);
+      setClassrooms(p => {
+        const updated = p.filter(c => c.id !== id);
+        // Mettre à jour classroomId si on supprime la classe sélectionnée
+        setFStudent(f => ({
+          ...f,
+          classroomId: f.classroomId === id ? (updated[0]?.id ?? '') : f.classroomId,
+        }));
+        setFSchedule(f => ({
+          ...f,
+          classroomId: f.classroomId === id ? (updated[0]?.id ?? '') : f.classroomId,
+        }));
+        return updated;
+      });
+      setStudents(p => p.filter(s => s.classroomId !== id));
+    } catch { alert('Erreur lors de la suppression'); }
   };
 
   const deleteStudent = async (id: string) => {
@@ -139,6 +239,7 @@ export default function GestionPage() {
     catch { alert('Erreur lors de la suppression'); }
   };
 
+  // ─── PLANNING ─────────────────────────────────────────────────────────────
   const addSchedule = async () => {
     if (!fSchedule.classroomId) return;
     setSaving(true); setFormError('');
@@ -160,7 +261,7 @@ export default function GestionPage() {
     }
   };
 
-  // ← NOUVEAU : filtrage des écoles selon la recherche
+  // ─── FILTRAGE RECHERCHE ───────────────────────────────────────────────────
   const filteredSchools = schools.filter(s =>
     s.name.toLowerCase().includes(search.toLowerCase()) ||
     s.city?.toLowerCase().includes(search.toLowerCase()) ||
@@ -188,7 +289,7 @@ export default function GestionPage() {
         <p className={styles.count}>{schools.length} école(s) · {classrooms.length} classe(s) · {students.length} élève(s)</p>
       </div>
 
-      {/* ← NOUVEAU : Barre de recherche */}
+      {/* Barre de recherche */}
       <div className={styles.searchWrapper}>
         <Search size={15} className={styles.searchIcon} />
         <input
@@ -222,14 +323,12 @@ export default function GestionPage() {
 
       {/* Accordéon Écoles > Classes > Élèves */}
       <div className={styles.accordion}>
-        {/* ← MODIFIÉ : filteredSchools au lieu de schools */}
         {filteredSchools.length === 0 ? (
           <div className={styles.emptyState}>
             <School size={40} className={styles.emptyIcon} />
             <p>{search ? 'Aucun résultat pour cette recherche.' : 'Aucune école. Cliquez sur + pour en ajouter une.'}</p>
           </div>
         ) : (
-          // ← MODIFIÉ : filteredSchools au lieu de schools
           filteredSchools.map(school => {
             const schoolClassrooms = classrooms.filter(c => c.schoolId === school.id);
             const isOpen = openSchools.includes(school.id);
@@ -326,54 +425,118 @@ export default function GestionPage() {
       </div>
 
       {/* ── Modales ── */}
+
+      {/* MODAL ÉCOLE */}
       {modal === 'school' && (
-        <Modal title="Nouvelle École" onClose={() => setModal(null)}>
+        <Modal title="Nouvelle École" onClose={() => { setModal(null); setFormError(''); }}>
           {formError && <div className={styles.formError}><AlertCircle size={14} />{formError}</div>}
           <form onSubmit={addSchool} className={styles.form}>
-            <div className={styles.formGroup}><label>Nom *</label><input value={fSchool.name} onChange={e => setFSchool({ ...fSchool, name: e.target.value })} required /></div>
-            <div className={styles.formGroup}><label>Ville</label><input value={fSchool.city} onChange={e => setFSchool({ ...fSchool, city: e.target.value })} /></div>
-            <button type="submit" className={styles.submitBtn} disabled={saving}>{saving ? 'Création...' : 'Créer'}</button>
+            <div className={styles.formGroup}>
+              <label>Nom *</label>
+              <input value={fSchool.name} onChange={e => setFSchool({ ...fSchool, name: e.target.value })} required />
+            </div>
+            <div className={styles.formGroup}>
+              <label>Ville</label>
+              <input value={fSchool.city} onChange={e => setFSchool({ ...fSchool, city: e.target.value })} />
+            </div>
+            <button type="submit" className={styles.submitBtn} disabled={saving}>
+              {saving ? 'Création...' : 'Créer'}
+            </button>
           </form>
         </Modal>
       )}
 
+      {/* MODAL CLASSE */}
       {modal === 'classroom' && (
-        <Modal title="Nouvelle Classe" onClose={() => setModal(null)}>
+        <Modal title="Nouvelle Classe" onClose={() => { setModal(null); setFormError(''); }}>
           {formError && <div className={styles.formError}><AlertCircle size={14} />{formError}</div>}
-          <form onSubmit={addClassroom} className={styles.form}>
-            <div className={styles.formGroup}><label>Nom *</label><input value={fClassroom.name} onChange={e => setFClassroom({ ...fClassroom, name: e.target.value })} required /></div>
-            <div className={styles.formGroup}><label>Niveau (ex: CE1)</label><input value={fClassroom.grade} onChange={e => setFClassroom({ ...fClassroom, grade: e.target.value })} /></div>
-            <div className={styles.formGroup}>
-              <label>École *</label>
-              <select value={fClassroom.schoolId} onChange={e => setFClassroom({ ...fClassroom, schoolId: e.target.value })} required>
-                {schools.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-              </select>
+
+          {/* ✅ FIX : message d'alerte si aucune école n'existe encore */}
+          {schools.length === 0 ? (
+            <div className={styles.formError}>
+              <AlertCircle size={14} />
+              Aucune école trouvée. Créez d'abord une école avant d'ajouter une classe.
             </div>
-            <button type="submit" className={styles.submitBtn} disabled={saving}>{saving ? 'Création...' : 'Créer'}</button>
-          </form>
+          ) : (
+            <form onSubmit={addClassroom} className={styles.form}>
+              <div className={styles.formGroup}>
+                <label>Nom *</label>
+                <input value={fClassroom.name} onChange={e => setFClassroom({ ...fClassroom, name: e.target.value })} required />
+              </div>
+              <div className={styles.formGroup}>
+                <label>Niveau (ex: CE1)</label>
+                <input value={fClassroom.grade} onChange={e => setFClassroom({ ...fClassroom, grade: e.target.value })} />
+              </div>
+              <div className={styles.formGroup}>
+                <label>École *</label>
+                {/* ✅ FIX : le select met bien à jour schoolId via onChange */}
+                <select
+                  value={fClassroom.schoolId}
+                  onChange={e => setFClassroom({ ...fClassroom, schoolId: e.target.value })}
+                  required
+                >
+                  {/* ✅ FIX : option vide initiale pour forcer le choix si schoolId est '' */}
+                  {!fClassroom.schoolId && <option value="">— Choisir une école —</option>}
+                  {schools.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
+              </div>
+              <button type="submit" className={styles.submitBtn} disabled={saving}>
+                {saving ? 'Création...' : 'Créer'}
+              </button>
+            </form>
+          )}
         </Modal>
       )}
 
+      {/* MODAL ÉLÈVE */}
       {modal === 'student' && (
-        <Modal title="Nouvel Élève" onClose={() => setModal(null)}>
+        <Modal title="Nouvel Élève" onClose={() => { setModal(null); setFormError(''); }}>
           {formError && <div className={styles.formError}><AlertCircle size={14} />{formError}</div>}
-          <form onSubmit={addStudent} className={styles.form}>
-            <div className={styles.formGroup}><label>Prénom *</label><input value={fStudent.firstName} onChange={e => setFStudent({ ...fStudent, firstName: e.target.value })} required /></div>
-            <div className={styles.formGroup}><label>Nom *</label><input value={fStudent.lastName} onChange={e => setFStudent({ ...fStudent, lastName: e.target.value })} required /></div>
-            <div className={styles.formGroup}>
-              <label>Classe *</label>
-              <select value={fStudent.classroomId} onChange={e => setFStudent({ ...fStudent, classroomId: e.target.value })} required>
-                {classrooms.map(c => <option key={c.id} value={c.id}>{c.schoolName ? `[${c.schoolName}] ` : ''}{c.name}{c.grade ? ` - ${c.grade}` : ''}
-</option>)}
-              </select>
+
+          {/* ✅ FIX : message d'alerte si aucune classe n'existe encore */}
+          {classrooms.length === 0 ? (
+            <div className={styles.formError}>
+              <AlertCircle size={14} />
+              Aucune classe trouvée. Créez d'abord une école et une classe avant d'ajouter un élève.
             </div>
-            <button type="submit" className={styles.submitBtn} disabled={saving}>{saving ? 'Création...' : 'Créer'}</button>
-          </form>
+          ) : (
+            <form onSubmit={addStudent} className={styles.form}>
+              <div className={styles.formGroup}>
+                <label>Prénom *</label>
+                <input value={fStudent.firstName} onChange={e => setFStudent({ ...fStudent, firstName: e.target.value })} required />
+              </div>
+              <div className={styles.formGroup}>
+                <label>Nom *</label>
+                <input value={fStudent.lastName} onChange={e => setFStudent({ ...fStudent, lastName: e.target.value })} required />
+              </div>
+              <div className={styles.formGroup}>
+                <label>Classe *</label>
+                {/* ✅ FIX : le select met bien à jour classroomId via onChange */}
+                <select
+                  value={fStudent.classroomId}
+                  onChange={e => setFStudent({ ...fStudent, classroomId: e.target.value })}
+                  required
+                >
+                  {/* ✅ FIX : option vide initiale pour forcer le choix si classroomId est '' */}
+                  {!fStudent.classroomId && <option value="">— Choisir une classe —</option>}
+                  {classrooms.map(c => (
+                    <option key={c.id} value={c.id}>
+                      {c.schoolName ? `[${c.schoolName}] ` : ''}{c.name}{c.grade ? ` - ${c.grade}` : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <button type="submit" className={styles.submitBtn} disabled={saving}>
+                {saving ? 'Création...' : 'Créer'}
+              </button>
+            </form>
+          )}
         </Modal>
       )}
 
+      {/* MODAL PLANNING */}
       {modal === 'schedule' && (
-        <Modal title="Planning de la semaine" onClose={() => setModal(null)}>
+        <Modal title="Planning de la semaine" onClose={() => { setModal(null); setFormError(''); }}>
           <p className={styles.scheduleHint}>Associez chaque jour à une classe. Un seul par jour.</p>
           {formError && <div className={styles.formError}><AlertCircle size={14} />{formError}</div>}
           <div className={styles.form}>
@@ -386,11 +549,17 @@ export default function GestionPage() {
             <div className={styles.formGroup}>
               <label>Classe</label>
               <select value={fSchedule.classroomId} onChange={e => setFSchedule({ ...fSchedule, classroomId: e.target.value })}>
-                {classrooms.map(c => <option key={c.id} value={c.id}>{c.schoolName ? `[${c.schoolName}] ` : ''}{c.name}{c.grade ? ` - ${c.grade}` : ''}
-</option>)}
+                {classrooms.length === 0
+                  ? <option value="">Aucune classe disponible</option>
+                  : classrooms.map(c => (
+                    <option key={c.id} value={c.id}>
+                      {c.schoolName ? `[${c.schoolName}] ` : ''}{c.name}{c.grade ? ` - ${c.grade}` : ''}
+                    </option>
+                  ))
+                }
               </select>
             </div>
-            <button className={styles.submitBtn} onClick={addSchedule} disabled={saving}>
+            <button className={styles.submitBtn} onClick={addSchedule} disabled={saving || classrooms.length === 0}>
               {saving ? 'Enregistrement...' : 'Enregistrer'}
             </button>
           </div>
@@ -398,4 +567,4 @@ export default function GestionPage() {
       )}
     </div>
   );
-} 
+}

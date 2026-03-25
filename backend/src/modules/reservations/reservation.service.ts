@@ -31,12 +31,19 @@ export class ReservationService {
     const sameClassroom = book.classroom.id === student.classroom.id;
     const sameSchool    = book.classroom.school.id === student.classroom.school.id;
 
-    if (!sameClassroom && !sameSchool) {
-      throw new AppError(
-        "L'élève ne peut pas réserver ce livre (classe et école différentes)",
-        403
-      );
-    }
+    if (!sameSchool) {
+        throw new AppError(
+          "Student cannot borrow this book (different school)",
+          403
+        );
+      }
+
+      if (!sameClassroom) {
+        throw new AppError(
+          "Student cannot borrow this book (same school, but different class)",
+          403
+        );
+      }
 
     const desiredFrom = dto.desiredFrom ? new Date(dto.desiredFrom) : null;
     if (dto.desiredFrom && isNaN(desiredFrom!.getTime())) {

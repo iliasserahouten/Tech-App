@@ -35,13 +35,19 @@ export class LoanService {
       const sameClassroom = book.classroom.id === student.classroom.id;
       const sameSchool = book.classroom.school.id === student.classroom.school.id;
 
-      if (!sameClassroom && !sameSchool) {
+      if (!sameSchool) {
         throw new AppError(
-          "Student cannot borrow this book (different class and school)",
+          "Student cannot borrow this book (different school)",
           403
         );
       }
 
+      if (!sameClassroom) {
+        throw new AppError(
+          "Student cannot borrow this book (same school, but different class)",
+          403
+        );
+      }
       const active = await this.repo.findActiveLoanByBook(book.id, tx);
       if (active) throw new AppError("Book is already loaned", 409);
 

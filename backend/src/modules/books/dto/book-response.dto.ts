@@ -6,6 +6,7 @@ export type BookResponseDto = {
   status: string;
   qrToken: string;
   classroomId: string;
+  classroom: string | null;
   createdAt: string;
   updatedAt: string;
 };

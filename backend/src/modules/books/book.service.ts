@@ -14,6 +14,7 @@ function toDto(b: any): BookResponseDto {
     status: b.status,
     qrToken: b.qrToken,
     classroomId: b.classroomId,
+    classroom: b.classroom ?? null, 
     createdAt: b.createdAt.toISOString(),
     updatedAt: b.updatedAt.toISOString(),
   };

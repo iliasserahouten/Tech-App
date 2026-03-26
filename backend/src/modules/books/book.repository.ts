@@ -2,6 +2,20 @@ import prisma from "../../config/prisma";
 import { CreateBookDto } from "./dto/create-book.dto";
 import { UpdateBookDto } from "./dto/update-book.dto";
 
+const bookInclude = {
+  classroom: {
+    select: {
+      name: true,
+      grade: true,
+      school: {
+        select: {
+          name: true,
+        },
+      },
+    },
+  },
+};
+
 export class BookRepository {
   create(classroomId: string, qrToken: string, dto: CreateBookDto) {
     return prisma.book.create({
@@ -12,6 +26,7 @@ export class BookRepository {
         qrToken,
         classroomId,
       },
+      include: bookInclude, // ← ajouter
     });
   }
 
@@ -19,15 +34,22 @@ export class BookRepository {
     return prisma.book.findMany({
       where: { classroomId },
       orderBy: { createdAt: "desc" },
+      include: bookInclude, // ← ajouter
     });
   }
 
   findById(id: string) {
-    return prisma.book.findUnique({ where: { id } });
+    return prisma.book.findUnique({
+      where: { id },
+      include: bookInclude, // ← ajouter
+    });
   }
 
   findByQrToken(qrToken: string) {
-    return prisma.book.findUnique({ where: { qrToken } });
+    return prisma.book.findUnique({
+      where: { qrToken },
+      include: bookInclude, // ← ajouter
+    });
   }
 
   updateById(id: string, dto: UpdateBookDto) {
@@ -38,6 +60,7 @@ export class BookRepository {
         ...(dto.universe !== undefined ? { universe: dto.universe ?? null } : {}),
         ...(dto.publisher !== undefined ? { publisher: dto.publisher ?? null } : {}),
       },
+      include: bookInclude, // ← ajouter
     });
   }
 

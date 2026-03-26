@@ -28,7 +28,7 @@ export default function LoginPage() {
     try {
       const response = await authService.login(data);
       login(response.token, response.user);
-      toast.success('Connexion réussie ! 🎉');
+      toast.success('Connexion réussie');
       navigate('/dashboard');
     } catch (error) {
       console.error('Erreur de connexion:', error);
@@ -69,7 +69,6 @@ export default function LoginPage() {
           borderRadius: '0.75rem',
           fontWeight: '500',
         },
-        icon: '❌',
       });
     } finally {
       setIsLoading(false);
@@ -99,7 +98,7 @@ export default function LoginPage() {
           {/* Bannière d'erreur globale */}
           {loginError && (
             <div className={styles.errorBanner}>
-              <span className={styles.errorIcon}>⚠️</span>
+              <span className={styles.errorIcon}></span>
               <span>{loginError}</span>
             </div>
           )}
@@ -128,7 +127,7 @@ export default function LoginPage() {
             </div>
             {errors.email && (
               <p className={styles.errorMessage}>
-                <span>⚠️</span>
+                <span></span>
                 {errors.email.message}
               </p>
             )}
@@ -170,7 +169,7 @@ export default function LoginPage() {
             </div>
             {errors.password && (
               <p className={styles.errorMessage}>
-                <span>⚠️</span>
+                <span></span>
                 {errors.password.message}
               </p>
             )}

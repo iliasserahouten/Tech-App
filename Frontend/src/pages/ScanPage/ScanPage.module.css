@@ -392,3 +392,15 @@
   .scanTitle h1 { font-size: 1.1rem; }
   .confirmBtn   { font-size: 0.95rem; padding: 14px; }
 }
+
+.bookClassInfo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: #6B7280;
+  background: #F9FAFB;
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}

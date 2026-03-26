@@ -375,7 +375,11 @@ export default function BooksPage() {
               {selectedBook.classroom && (
                 <div className={styles.detailRow}>
                   <span>Classe</span>
-                  <span>{selectedBook.classroom.name}</span>
+                  <span>
+                    {selectedBook.classroom.school?.name && `${selectedBook.classroom.school.name} · `}
+                    {selectedBook.classroom.name}
+                    {selectedBook.classroom.grade ? ` - ${selectedBook.classroom.grade}` : ''}
+                  </span>
                 </div>
               )}
               {selectedBook.status === 'LOANED' && selectedBook.currentLoan && (

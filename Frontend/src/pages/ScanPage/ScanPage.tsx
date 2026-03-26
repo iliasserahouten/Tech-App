@@ -169,54 +169,40 @@ function ScanFrame({ onScan }: { onScan: (code: string) => void }) {
 
 // ── Phase 2 : Formulaire d'emprunt ───────────────────────────────────────────
 function EmpruntForm({
-  book, onBack, onSuccess,
+  book,
+  onBack,
+  onSuccess,
 }: {
   book: Book;
   onBack: () => void;
   onSuccess: (msg: string) => void;
 }) {
-  const [allClassrooms, setAllClassrooms]             = useState<Classroom[]>([]);
-  const [selectedClassroomId, setSelectedClassroomId] = useState('');
-  const [students, setStudents]                       = useState<Student[]>([]);
-  const [studentId, setStudentId]                     = useState('');
-  const [dueAt, setDueAt]                             = useState(addDays(15));
-  const [loading, setLoading]                         = useState(false);
-  const [loadingStudents, setLoadingStudents]         = useState(true);
-  const [error, setError]                             = useState('');
+  const [students, setStudents]   = useState<Student[]>([]);
+  const [studentId, setStudentId] = useState('');
+  const [dueAt, setDueAt]         = useState(addDays(15));
+  const [loading, setLoading]     = useState(false);
+  const [loadingStudents, setLoadingStudents] = useState(true);
+  const [error, setError]         = useState('');
 
+  // Charger uniquement les élèves de la classe du livre
   useEffect(() => {
-    Promise.all([
-      classroomsService.getMyClassrooms(),
-      classroomsService.getTodayClassroom(),
-    ]).then(([cls, todayClass]) => {
-      setAllClassrooms(cls);
-      if (cls.length > 0) {
-        const defaultId = todayClass
-          ? cls.find(c => c.id === todayClass.id)?.id ?? cls[0].id
-          : cls[0].id;
-        setSelectedClassroomId(defaultId);
-      }
-    }).catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    if (!selectedClassroomId) return;
-    setLoadingStudents(true);
-    setStudentId('');
-    studentsService.getStudentsByClassroom(selectedClassroomId).then(data => {
+    studentsService.getStudentsByClassroom(book.classroomId).then(data => {
       setStudents(data);
       if (data.length > 0) setStudentId(data[0].id);
       setLoadingStudents(false);
     }).catch(() => setLoadingStudents(false));
-  }, [selectedClassroomId]);
+  }, [book.classroomId]);
 
   const handleConfirm = async () => {
     if (!studentId) return;
     setLoading(true);
     setError('');
     try {
-      await booksService.createLoan({ qrToken: book.qrToken, studentId, dueAt });
-      if ('vibrate' in navigator) navigator.vibrate([80, 40, 80]);
+      await booksService.createLoan({
+        qrToken: book.qrToken,
+        studentId,
+        dueAt,
+      });
       const student = students.find(s => s.id === studentId);
       onSuccess(`Emprunt enregistré pour ${student?.firstName} ${student?.lastName}`);
     } catch (err: any) {
@@ -232,7 +218,7 @@ function EmpruntForm({
         <ArrowLeft size={18} /> Retour
       </button>
 
-      <div className={`${styles.bookCard} ${styles.bookCardAvailable}`}>
+      <div className={styles.bookCard + ' ' + styles.bookCardAvailable}>
         <div className={styles.bookCardIcon}>
           <CheckCircle size={24} className={styles.iconGreen} />
         </div>
@@ -244,26 +230,24 @@ function EmpruntForm({
       </div>
 
       <h2 className={styles.actionTitle}>Nouvel Emprunt</h2>
+
+      {/* Info classe du livre */}
+      {book.classroom && (
+        <div className={styles.bookClassInfo}>
+          <Users size={14} />
+          Classe : <strong>{book.classroom.name}{book.classroom.grade ? ` - ${book.classroom.grade}` : ''}</strong>
+          {book.classroom.school?.name && ` · ${book.classroom.school.name}`}
+        </div>
+      )}
+
       {error && <div className={styles.errorBox}><AlertTriangle size={16} />{error}</div>}
 
       <div className={styles.formSection}>
+        {/* Sélecteur d'élève uniquement */}
         <div className={styles.formGroup}>
-          <label className={styles.formLabel}><Users size={14} /> Classe</label>
-          <select
-            value={selectedClassroomId}
-            onChange={e => setSelectedClassroomId(e.target.value)}
-            className={styles.formSelect}
-          >
-            {allClassrooms.map(c => (
-              <option key={c.id} value={c.id}>
-                {c.schoolName ? `[${c.schoolName}] ` : ''}{c.name}{c.grade ? ` - ${c.grade}` : ''}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className={styles.formGroup}>
-          <label className={styles.formLabel}><User size={14} /> Élève</label>
+          <label className={styles.formLabel}>
+            <User size={14} /> Élève
+          </label>
           {loadingStudents ? (
             <div className={styles.loadingStudents}>
               <Loader size={16} className={styles.spin} /> Chargement...
@@ -280,11 +264,13 @@ function EmpruntForm({
             </select>
           ) : (
             <p className={styles.noStudents}>
-              <AlertTriangle size={14} /> Aucun élève dans cette classe.
+              <AlertTriangle size={14} />
+              Aucun élève dans cette classe. Ajoutez-en dans la Gestion.
             </p>
           )}
         </div>
 
+        {/* Date de retour */}
         <div className={styles.formGroup}>
           <label className={styles.formLabel}>
             <Calendar size={14} /> Date de retour prévue (J+15 par défaut)
@@ -300,7 +286,7 @@ function EmpruntForm({
       </div>
 
       <button
-        className={`${styles.confirmBtn} ${styles.confirmBtnGreen}`}
+        className={styles.confirmBtn + ' ' + styles.confirmBtnGreen}
         onClick={handleConfirm}
         disabled={loading || !studentId}
       >
@@ -320,35 +306,25 @@ function RetourForm({
   onBack: () => void;
   onSuccess: (msg: string) => void;
 }) {
-  const [loading, setLoading]                         = useState(false);
-  const [error, setError]                             = useState('');
-  const [showReservation, setShowReservation]         = useState(false);
-  const [allClassrooms, setAllClassrooms]             = useState<Classroom[]>([]);
-  const [selectedClassroomId, setSelectedClassroomId] = useState('');
-  const [students, setStudents]                       = useState<Student[]>([]);
-  const [studentId, setStudentId]                     = useState('');
-  const [loadingStudents, setLoadingStudents]         = useState(false);
-  const [desiredFrom, setDesiredFrom]                 = useState(addDays(1));
+  const [loading, setLoading]             = useState(false);
+  const [error, setError]                 = useState('');
+  const [showReservation, setShowReservation] = useState(false);
+  const [students, setStudents]           = useState<Student[]>([]);
+  const [studentId, setStudentId]         = useState('');
+  const [loadingStudents, setLoadingStudents] = useState(false);
+  const [desiredFrom, setDesiredFrom]     = useState(addDays(1));
   const isLate = loan?.status === 'LATE';
 
+  // Charger les élèves de la classe du livre quand on ouvre la réservation
   useEffect(() => {
     if (!showReservation) return;
-    classroomsService.getMyClassrooms().then(cls => {
-      setAllClassrooms(cls);
-      if (cls.length > 0) setSelectedClassroomId(cls[0].id);
-    }).catch(() => {});
-  }, [showReservation]);
-
-  useEffect(() => {
-    if (!selectedClassroomId) return;
     setLoadingStudents(true);
-    setStudentId('');
-    studentsService.getStudentsByClassroom(selectedClassroomId).then(data => {
+    studentsService.getStudentsByClassroom(book.classroomId).then(data => {
       setStudents(data);
       if (data.length > 0) setStudentId(data[0].id);
       setLoadingStudents(false);
     }).catch(() => setLoadingStudents(false));
-  }, [selectedClassroomId]);
+  }, [showReservation, book.classroomId]);
 
   const handleConfirm = async () => {
     setLoading(true);
@@ -441,24 +417,20 @@ function RetourForm({
         <>
           <h2 className={styles.actionTitle}>Réserver ce livre</h2>
           <p className={styles.reserveHint}>Le livre sera réservé dès son retour en rayon.</p>
+
+          {/* Info classe du livre */}
+          {book.classroom && (
+            <div className={styles.bookClassInfo}>
+              <Users size={14} />
+              Classe : <strong>{book.classroom.name}{book.classroom.grade ? ` - ${book.classroom.grade}` : ''}</strong>
+              {book.classroom.school?.name && ` · ${book.classroom.school.name}`}
+            </div>
+          )}
+
           {error && <div className={styles.errorBox}><AlertTriangle size={16} />{error}</div>}
 
           <div className={styles.formSection}>
-            <div className={styles.formGroup}>
-              <label className={styles.formLabel}><Users size={14} /> Classe</label>
-              <select
-                value={selectedClassroomId}
-                onChange={e => setSelectedClassroomId(e.target.value)}
-                className={styles.formSelect}
-              >
-                {allClassrooms.map(c => (
-                  <option key={c.id} value={c.id}>
-                    {c.schoolName ? `[${c.schoolName}] ` : ''}{c.name}{c.grade ? ` - ${c.grade}` : ''}
-                  </option>
-                ))}
-              </select>
-            </div>
-
+            {/* Élève uniquement */}
             <div className={styles.formGroup}>
               <label className={styles.formLabel}><User size={14} /> Élève</label>
               {loadingStudents ? (

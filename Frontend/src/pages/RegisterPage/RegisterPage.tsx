@@ -36,7 +36,7 @@ export default function RegisterPage() {
         firstName: data.firstName,
         lastName: data.lastName,
       });
-      toast.success('Compte créé avec succès ! 🎉');
+      toast.success('Compte créé avec succès ! ');
       navigate('/login');
     } catch (error: any) {
       toast.error(

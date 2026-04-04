@@ -360,7 +360,7 @@ export default function GestionPage() {
                             <div className={styles.classroomRow} onClick={() => toggleClassroom(cls.id)}>
                               <div className={styles.classroomIcon}><Users size={14} /></div>
                               <div className={styles.classroomInfo}>
-                                <p className={styles.classroomName}>{cls.name} {cls.grade ? `(${cls.grade})` : ''}</p>
+                                <p className={styles.classroomName}>{cls.name}</p>
                                 <p className={styles.classroomMeta}>
                                   {clsStudents.length} élève(s)
                                   {clsSchedule ? ` · ${DAY_LABELS[clsSchedule.dayOfWeek]}` : ''}
@@ -464,10 +464,6 @@ export default function GestionPage() {
                 <input value={fClassroom.name} onChange={e => setFClassroom({ ...fClassroom, name: e.target.value })} required />
               </div>
               <div className={styles.formGroup}>
-                <label>Niveau (ex: CE1)</label>
-                <input value={fClassroom.grade} onChange={e => setFClassroom({ ...fClassroom, grade: e.target.value })} />
-              </div>
-              <div className={styles.formGroup}>
                 <label>École *</label>
                 {/* ✅ FIX : le select met bien à jour schoolId via onChange */}
                 <select
@@ -521,7 +517,8 @@ export default function GestionPage() {
                   {!fStudent.classroomId && <option value="">— Choisir une classe —</option>}
                   {classrooms.map(c => (
                     <option key={c.id} value={c.id}>
-                      {c.schoolName ? `[${c.schoolName}] ` : ''}{c.name}{c.grade ? ` - ${c.grade}` : ''}
+                      {c.schoolName ? `[${c.schoolName}] ` : ''}{c.name}
+
                     </option>
                   ))}
                 </select>
@@ -553,7 +550,8 @@ export default function GestionPage() {
                   ? <option value="">Aucune classe disponible</option>
                   : classrooms.map(c => (
                     <option key={c.id} value={c.id}>
-                      {c.schoolName ? `[${c.schoolName}] ` : ''}{c.name}{c.grade ? ` - ${c.grade}` : ''}
+                      {c.schoolName ? `[${c.schoolName}] ` : ''}{c.name}
+
                     </option>
                   ))
                 }

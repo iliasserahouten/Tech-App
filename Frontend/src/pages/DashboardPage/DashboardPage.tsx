@@ -155,7 +155,7 @@ export default function DashboardPage() {
               >
                 {myClassrooms.map((classroom) => (
                   <option key={classroom.id} value={classroom.id}>
-                    {classroom.name} {classroom.grade ? `- ${classroom.grade}` : ''}
+                    {classroom.name}
                   </option>
                 ))}
               </select>
@@ -184,21 +184,21 @@ export default function DashboardPage() {
           <div className={styles.statsGrid}>
             <StatCard
               icon={BookOpen}
-              label="Les livres Empruntés"
+              label={`${stats.totalBorrowed} livre${stats.totalBorrowed > 1 ? 's' : ''} Emprunté${stats.totalBorrowed > 1 ? 's' : ''}`}
               value={stats.totalBorrowed}
               color="#3B82F6"
               bgColor="#DBEAFE"
             />
             <StatCard
               icon={AlertCircle}
-              label="Retards"
+              label={`${stats.totalOverdue} Retard${stats.totalOverdue > 1 ? 's' : ''}`}
               value={stats.totalOverdue}
               color="#EF4444"
               bgColor="#FEE2E2"
             />
             <StatCard
               icon={CheckCircle}
-              label="Livres disponibles"
+              label={`${stats.totalAvailable} livre${stats.totalAvailable > 1 ? 's' : ''} disponible${stats.totalAvailable > 1 ? 's' : ''}`}
               value={stats.totalAvailable}
               color="#10B981"
               bgColor="#D1FAE5"

@@ -9,7 +9,6 @@ function toDto(c: any): ClassroomResponseDto {
   return {
     id: c.id,
     name: c.name,
-    grade: c.grade,
     schoolId: c.schoolId,
     schoolName: c.school?.name ?? null,
     createdAt: c.createdAt.toISOString(),

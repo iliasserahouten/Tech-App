@@ -63,7 +63,6 @@ model School {
 model Classroom {
   id        String  @id @default(cuid())
   name      String
-  grade     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

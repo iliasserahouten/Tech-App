@@ -235,7 +235,7 @@ function EmpruntForm({
       {book.classroom && (
         <div className={styles.bookClassInfo}>
           <Users size={14} />
-          Classe : <strong>{book.classroom.name}{book.classroom.grade ? ` - ${book.classroom.grade}` : ''}</strong>
+          Classe : <strong>{book.classroom.name}</strong>
           {book.classroom.school?.name && ` · ${book.classroom.school.name}`}
         </div>
       )}
@@ -422,7 +422,7 @@ function RetourForm({
           {book.classroom && (
             <div className={styles.bookClassInfo}>
               <Users size={14} />
-              Classe : <strong>{book.classroom.name}{book.classroom.grade ? ` - ${book.classroom.grade}` : ''}</strong>
+              Classe : <strong>{book.classroom.name}</strong>
               {book.classroom.school?.name && ` · ${book.classroom.school.name}`}
             </div>
           )}

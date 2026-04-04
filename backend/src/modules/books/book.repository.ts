@@ -6,7 +6,6 @@ const bookInclude = {
   classroom: {
     select: {
       name: true,
-      grade: true,
       school: {
         select: {
           name: true,

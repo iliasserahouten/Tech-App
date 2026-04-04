@@ -7,7 +7,7 @@ import { Book, Classroom, School, BookStatus } from '../../types';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import styles from './BooksPage.module.css';
-import { QRCodeSVG } from 'qrcode.react';
+import { QRCodeSVG, QRCodeCanvas } from 'qrcode.react';
 
 // ── Badge statut ──
 function StatusBadge({ status }: { status: BookStatus }) {
@@ -32,9 +32,9 @@ function QRModal({ book, onClose }: { book: Book; onClose: () => void }) {
         <div className={styles.qrContent}>
           {/* ← Vrai QR code unique par livre */}
           <div className={styles.qrPlaceholder}>
-            <QRCodeSVG
+            <QRCodeCanvas
               value={book.qrToken}
-              size={160}
+              size={100}
               level="M"
               includeMargin={true}
             />
@@ -97,6 +97,7 @@ function AddBookModal({
       setLoading(false);
     }
   };
+  
 
   return (
     <div className={styles.modalOverlay} onClick={onClose}>
@@ -138,7 +139,8 @@ function AddBookModal({
             >
               {classrooms.map(c => (
                 <option key={c.id} value={c.id}>
-                  {c.schoolName ? `[${c.schoolName}] ` : ''}{c.name}{c.grade ? ` - ${c.grade}` : ''}
+                  {c.schoolName ? `[${c.schoolName}] ` : ''}{c.name}
+
                 </option>
               ))}
             </select>
@@ -161,6 +163,113 @@ function AddBookModal({
   );
 }
 
+function BulkPrintModal({ books, onClose }: { books: Book[]; onClose: () => void }) {
+
+  const handlePrint = () => {
+    // Convertir les canvas en images base64
+    const canvases = document.querySelectorAll('#bulk-print-area canvas');
+    const images: string[] = [];
+    canvases.forEach((canvas) => {
+      images.push((canvas as HTMLCanvasElement).toDataURL('image/png'));
+    });
+
+    // Ouvrir une nouvelle fenêtre avec uniquement les étiquettes
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Étiquettes QR</title>
+          <style>
+            body { margin: 0; padding: 20px; font-family: sans-serif; }
+            .grid {
+              display: grid;
+              grid-template-columns: repeat(3, 1fr);
+              gap: 16px;
+            }
+            .item {
+              border: 1px dashed #ccc;
+              border-radius: 8px;
+              padding: 12px;
+              text-align: center;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              gap: 4px;
+              page-break-inside: avoid;
+            }
+            .item img { width: 100px; height: 100px; }
+            .token { font-family: monospace; font-size: 11px; font-weight: bold; color: #333; }
+            .title { font-size: 12px; font-weight: 600; color: #111; }
+            .classe { font-size: 10px; color: #666; }
+            @media print {
+              body { padding: 10px; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="grid">
+            ${books.map((book, i) => `
+              <div class="item">
+                <img src="${images[i]}" />
+                <p class="token">${book.qrToken}</p>
+                <p class="title">${book.title}</p>
+                ${book.classroom ? `<p class="classe">${book.classroom.school?.name ?? ''} · ${book.classroom.name}</p>` : ''}
+              </div>
+            `).join('')}
+          </div>
+          <script>
+            window.onload = () => {
+              window.print();
+              window.onafterprint = () => window.close();
+            };
+          </script>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.write(html);
+    printWindow.document.close();
+  };
+
+  return (
+    <div className={styles.modalOverlay} onClick={onClose}>
+      <div className={styles.bulkPrintModal} onClick={e => e.stopPropagation()}>
+        <div className={styles.modalHeader}>
+          <h3>Impression groupée — {books.length} étiquette(s)</h3>
+          <button className={styles.closeBtn} onClick={onClose}><X size={18} /></button>
+        </div>
+
+        <div className={styles.bulkPrintGrid} id="bulk-print-area">
+          {books.map(book => (
+            <div key={book.id} className={styles.bulkPrintItem}>
+              <QRCodeCanvas
+                value={book.qrToken}
+                size={100}
+                level="M"
+                includeMargin={true}
+              />
+              <p className={styles.bulkPrintToken}>{book.qrToken}</p>
+              <p className={styles.bulkPrintTitle}>{book.title}</p>
+              {book.classroom && (
+                <p className={styles.bulkPrintClass}>
+                  {book.classroom.school?.name} · {book.classroom.name}
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+
+        <button className={styles.printBtn} onClick={handlePrint}>
+          Imprimer toutes les étiquettes
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ── Page principale ──
 export default function BooksPage() {
   const [books, setBooks]           = useState<Book[]>([]);
@@ -175,7 +284,8 @@ export default function BooksPage() {
   const [showAdd, setShowAdd]                 = useState(false);
   const [selectedIds, setSelectedIds]         = useState<string[]>([]);
   const [deleting, setDeleting]               = useState(false);
-
+  const [showBulkPrint, setShowBulkPrint] = useState(false);
+  const selectedBooks = books.filter(b => selectedIds.includes(b.id));
   useEffect(() => {
     loadData();
   }, []);
@@ -192,9 +302,12 @@ export default function BooksPage() {
       setClassrooms(classroomsData);
       setSchools(schoolsData);
 
-      // Smart Filter: pré-sélectionner la classe du jour
-      const todayClassroom = await classroomsService.getTodayClassroom();
-      if (todayClassroom) setFiltreClassroom(todayClassroom.id);
+    const todayClassroom = await classroomsService.getTodayClassroom();
+    if (todayClassroom) {
+      setFiltreClassroom(todayClassroom.id);
+    } else if (classroomsData.length > 0) {
+      setFiltreClassroom(classroomsData[0].id); 
+    }
     } catch (err) {
       console.error('Erreur chargement livres:', err);
     } finally {
@@ -244,15 +357,17 @@ export default function BooksPage() {
         <h1 className={styles.title}>Bibliothèque</h1>
         <div className={styles.actions}>
           {selectedIds.length > 0 && (
-            <button className={styles.deleteBtn} onClick={handleDelete} disabled={deleting}>
-              <Trash2 size={16} />
-              Supprimer ({selectedIds.length})
-            </button>
+            <>
+              <button className={styles.printGroupBtn} onClick={() => setShowBulkPrint(true)}>
+                <QrCode size={16} />
+                Imprimer ({selectedIds.length})
+              </button>
+              <button className={styles.deleteBtn} onClick={handleDelete} disabled={deleting}>
+                <Trash2 size={16} />
+                Supprimer ({selectedIds.length})
+              </button>
+            </>
           )}
-          <button className={styles.addBtn} onClick={() => setShowAdd(true)}>
-            <Plus size={16} />
-            Nouveau livre
-          </button>
         </div>
       </div>
 
@@ -277,7 +392,8 @@ export default function BooksPage() {
               <option value="">Toutes les classes</option>
               {classrooms.map(c => (
                 <option key={c.id} value={c.id}>
-                  {c.schoolName ? `[${c.schoolName}] ` : ''}{c.name}{c.grade ? ` - ${c.grade}` : ''}
+                  {c.schoolName ? `[${c.schoolName}] ` : ''}{c.name}
+
                 </option>
               ))}
             </select>
@@ -378,7 +494,6 @@ export default function BooksPage() {
                   <span>
                     {selectedBook.classroom.school?.name && `${selectedBook.classroom.school.name} · `}
                     {selectedBook.classroom.name}
-                    {selectedBook.classroom.grade ? ` - ${selectedBook.classroom.grade}` : ''}
                   </span>
                 </div>
               )}
@@ -427,6 +542,13 @@ export default function BooksPage() {
           classrooms={classrooms}
           onClose={() => setShowAdd(false)}
           onAdd={book => setBooks(prev => [book, ...prev])}
+        />
+      )}
+      {/* Impression groupée */}
+      {showBulkPrint && (
+        <BulkPrintModal
+          books={selectedBooks}
+          onClose={() => setShowBulkPrint(false)}
         />
       )}
     </div>

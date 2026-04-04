@@ -7,7 +7,6 @@ export class ClassroomRepository {
     return prisma.classroom.create({
       data: {
         name: dto.name,
-        grade: dto.grade ?? null,
         schoolId,
       },
     });
@@ -31,7 +30,7 @@ export class ClassroomRepository {
       where: { id },
       data: {
         ...(dto.name !== undefined ? { name: dto.name } : {}),
-        ...(dto.grade !== undefined ? { grade: dto.grade ?? null } : {}),
+     
       },
     });
   }

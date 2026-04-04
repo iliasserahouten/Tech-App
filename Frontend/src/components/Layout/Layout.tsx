@@ -104,9 +104,13 @@ export default function Layout() {
           {/* User + logout */}
           <div className={styles.userSection}>
             <div className={styles.userInfo}>
-              <div className={styles.userAvatar}>
-                {user?.firstName?.[0] || user?.email?.[0]?.toUpperCase()}
-              </div>
+            <button
+              className={styles.userAvatar}
+              onClick={() => navigate('/profile')}
+              title="Mon profil"
+            >
+              {user?.firstName?.[0] || user?.email?.[0]?.toUpperCase()}
+            </button>
               <div className={styles.userDetails}>
                 <span className={styles.userName}>
                   {user?.firstName && user?.lastName

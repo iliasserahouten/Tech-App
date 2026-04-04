@@ -15,6 +15,7 @@ import BooksPage from './pages/BooksPage/BooksPage';
 import ScanPage from './pages/ScanPage/ScanPage';
 import GestionPage from './pages/GestionPage/GestionPage';
 import HistoryPage from './pages/HistoryPage/HistoryPage';
+import ProfilePage from './pages/ProfilePage/ProfilePage';
 
 function App() {
   const { initAuth } = useAuthStore();
@@ -70,6 +71,7 @@ function App() {
           <Route path="scan"      element={<ScanPage />} />
           <Route path="history"   element={<HistoryPage />} />
           <Route path="gestion"   element={<GestionPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
         </Route>
 
         {/* Redirection par défaut */}

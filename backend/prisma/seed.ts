@@ -11,7 +11,7 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  console.log('🌱 Début du seed...');
+  console.log('Début du seed...');
 
   await prisma.reservation.deleteMany();
   await prisma.loan.deleteMany();
@@ -21,7 +21,7 @@ async function main() {
   await prisma.student.deleteMany();
   await prisma.classroom.deleteMany();
   await prisma.school.deleteMany();
-  console.log('🧹 Base nettoyée');
+  console.log('Base nettoyée');
 
   const passwordHash = await bcrypt.hash('demo1234', 10);
   const user = await prisma.user.upsert({
@@ -34,7 +34,7 @@ async function main() {
       lastName: 'Dupont',
     },
   });
-  console.log(`✅ User créé : ${user.email}`);
+  console.log(`User créé : ${user.email}`);
 
   const schoolFerry = await prisma.school.create({
     data: { name: 'École Jules Ferry', city: 'Paris', teacherId: user.id },
@@ -42,21 +42,21 @@ async function main() {
   const schoolHugo = await prisma.school.create({
     data: { name: 'École Victor Hugo', city: 'Lyon', teacherId: user.id },
   });
-  console.log('✅ Écoles créées');
+  console.log('Écoles créées');
 
   const cpA = await prisma.classroom.create({
-    data: { name: 'CP A', grade: 'CP', schoolId: schoolFerry.id },
+    data: { name: 'CP A', schoolId: schoolFerry.id },
   });
   const ce1B = await prisma.classroom.create({
-    data: { name: 'CE1 B', grade: 'CE1', schoolId: schoolFerry.id },
+    data: { name: 'CE1 B', schoolId: schoolFerry.id },
   });
   const cm1A = await prisma.classroom.create({
-    data: { name: 'CM1 A', grade: 'CM1', schoolId: schoolFerry.id },
+    data: { name: 'CM1 A', schoolId: schoolFerry.id },
   });
   const cm2B = await prisma.classroom.create({
-    data: { name: 'CM2 B', grade: 'CM2', schoolId: schoolHugo.id },
+    data: { name: 'CM2 B', schoolId: schoolHugo.id },
   });
-  console.log('✅ Classes créées');
+  console.log('Classes créées');
 
   await prisma.teacherClassroom.createMany({
     data: [
@@ -66,7 +66,7 @@ async function main() {
       { teacherId: user.id, classroomId: cm2B.id },
     ],
   });
-  console.log('✅ Liaisons enseignant-classes créées');
+  console.log('Liaisons enseignant-classes créées');
 
   await prisma.classSchedule.createMany({
     data: [
@@ -77,7 +77,7 @@ async function main() {
       { dayOfWeek: DayOfWeek.FRIDAY,    classroomId: cpA.id,  teacherId: user.id },
     ],
   });
-  console.log('✅ Planning créé');
+  console.log(' Planning créé');
 
   const [lucas, emma, noah, lea, tom, ines, louis, jade] = await Promise.all([
     prisma.student.create({ data: { firstName: 'Lucas', lastName: 'Martin',  classroomId: cpA.id  } }),
@@ -89,7 +89,7 @@ async function main() {
     prisma.student.create({ data: { firstName: 'Louis', lastName: 'Michel',  classroomId: cm2B.id } }),
     prisma.student.create({ data: { firstName: 'Jade',  lastName: 'Garcia',  classroomId: cm2B.id } }),
   ]);
-  console.log('✅ Élèves créés');
+  console.log(' Élèves créés');
 
   const [petitPrince, charlotteWeb, harryPotter, matilda, miserables, voyage, lion, james] =
     await Promise.all([
@@ -102,7 +102,7 @@ async function main() {
       prisma.book.create({ data: { title: "Le Lion et la Sorcière Blanche", universe: "Fantastique", publisher: "Gallimard",     status: BookStatus.RESERVED,  qrToken: "LIV-0007", classroomId: cm2B.id } }),
       prisma.book.create({ data: { title: "James et la Grosse Pêche",       universe: "Jeunesse",    publisher: "Gallimard",     status: BookStatus.AVAILABLE, qrToken: "LIV-0008", classroomId: cm2B.id } }),
     ]);
-  console.log('✅ Livres créés');
+  console.log(' Livres créés');
 
   const now = new Date();
   const daysAgo  = (n: number) => new Date(now.getTime() - n * 86400000);
@@ -137,7 +137,7 @@ async function main() {
       },
     ],
   });
-  console.log('✅ Emprunts créés');
+  console.log(' Emprunts créés');
 
   await prisma.reservation.create({
     data: {
@@ -147,18 +147,18 @@ async function main() {
       desiredFrom: daysFrom(7),
     },
   });
-  console.log('✅ Réservation créée');
+  console.log(' Réservation créée');
 
-  console.log('\n🎉 Seed terminé avec succès !');
+  console.log('\n Seed terminé avec succès !');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('📧 Email    : demo@bibliotheque.fr');
-  console.log('🔑 Password : demo1234');
+  console.log('Email    : demo@bibliotheque.fr');
+  console.log(' Password : demo1234');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 }
 
 main()
   .catch((e) => {
-    console.error('❌ Erreur seed:', e);
+    console.error(' Erreur seed:', e);
     process.exit(1);
   })
   .finally(async () => {

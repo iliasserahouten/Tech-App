@@ -101,10 +101,16 @@ export default function HistoryPage() {
     Promise.all([
       loansService.getAllLoans(),
       classroomsService.getMyClassrooms(),
+      classroomsService.getTodayClassroom(),
     ])
-      .then(([loansData, classroomsData]) => {
+      .then(([loansData, classroomsData, todayClassroom]) => {
         setLoans(loansData);
         setClassrooms(classroomsData);
+      if (todayClassroom) {
+        setFilterClassroom(todayClassroom.id);
+      } else if (classroomsData.length > 0) {
+        setFilterClassroom(classroomsData[0].id); // ← première classe par défaut
+      }
       })
       .catch(() => setError('Impossible de charger l\'historique'))
       .finally(() => setLoading(false));

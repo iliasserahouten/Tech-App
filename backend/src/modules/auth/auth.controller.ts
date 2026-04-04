@@ -34,4 +34,14 @@ export class AuthController {
       return next(e);
     }
   };
+
+  updateProfile = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = req.user!.id;
+    const data = await this.service.updateProfile(userId, req.body);
+    return res.json(data);
+  } catch (e) {
+    return next(e);
+  }
+};
 }

@@ -82,4 +82,44 @@ if (existing) throw new AppError("Email already in use", 409);
     if (!user) throw new AppError("User not found", 404);
     return user;
   }
+  async updateProfile(userId: string, dto: {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  currentPassword?: string;
+  newPassword?: string;
+}) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, email: true, passwordHash: true },
+  });
+  if (!user) throw new AppError("User not found", 404);
+
+
+  if (dto.newPassword) {
+    if (!dto.currentPassword) throw new AppError("Current password is required", 400);
+    const ok = await bcrypt.compare(dto.currentPassword, user.passwordHash);
+    if (!ok) throw new AppError("Current password is incorrect", 401);
+    if (dto.newPassword.length < 6) throw new AppError("New password must be at least 6 chars", 400);
+  }
+
+  if (dto.email && dto.email !== user.email) {
+    const existing = await prisma.user.findUnique({ where: { email: dto.email } });
+    if (existing) throw new AppError("Email already in use", 409);
+  }
+
+  const updated = await prisma.user.update({
+    where: { id: userId },
+    data: {
+      ...(dto.firstName !== undefined ? { firstName: dto.firstName } : {}),
+      ...(dto.lastName !== undefined ? { lastName: dto.lastName } : {}),
+      ...(dto.email ? { email: dto.email.trim().toLowerCase() } : {}),
+      ...(dto.newPassword ? { passwordHash: await bcrypt.hash(dto.newPassword, 10) } : {}),
+    },
+    select: { id: true, email: true, firstName: true, lastName: true },
+  });
+
+  const token = this.signToken({ id: updated.id, email: updated.email });
+  return { user: updated, token };
+}
 }

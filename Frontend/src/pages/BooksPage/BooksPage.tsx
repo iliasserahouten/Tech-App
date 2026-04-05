@@ -7,7 +7,7 @@ import { Book, Classroom, School, BookStatus } from '../../types';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import styles from './BooksPage.module.css';
-import { QRCodeSVG, QRCodeCanvas } from 'qrcode.react';
+import { QRCodeCanvas } from 'qrcode.react';
 
 // ── Badge statut ──
 function StatusBadge({ status }: { status: BookStatus }) {

@@ -8,8 +8,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import styles from './BooksPage.module.css';
 import { QRCodeCanvas } from 'qrcode.react';
-
-// ── Badge statut ──
+//   Badge statut   
 function StatusBadge({ status }: { status: BookStatus }) {
   const map = {
     AVAILABLE: { label: 'Disponible', className: styles.badgeAvailable },
@@ -20,7 +19,7 @@ function StatusBadge({ status }: { status: BookStatus }) {
   return <span className={`${styles.badge} ${className}`}>{label}</span>;
 }
 
-// ── Modale QR ──
+//   Modale QR   
 function QRModal({ book, onClose }: { book: Book; onClose: () => void }) {
   return (
     <div className={styles.modalOverlay} onClick={onClose}>
@@ -56,7 +55,7 @@ function QRModal({ book, onClose }: { book: Book; onClose: () => void }) {
   );
 }
 
-// ── Modale ajout livre ──
+//   Modale ajout livre   
 function AddBookModal({
   classrooms,
   onClose,
@@ -270,7 +269,7 @@ function BulkPrintModal({ books, onClose }: { books: Book[]; onClose: () => void
   );
 }
 
-// ── Page principale ──
+//   Page principale   
 export default function BooksPage() {
   const [books, setBooks]           = useState<Book[]>([]);
   const [classrooms, setClassrooms] = useState<Classroom[]>([]);

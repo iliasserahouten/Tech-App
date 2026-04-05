@@ -1,6 +1,4 @@
-/* ═══════════════════════════════════════════════════════
-   SCAN PAGE — optimisé mobile
-═══════════════════════════════════════════════════════ */
+
 
 .page {
   padding: 16px;
@@ -11,7 +9,7 @@
 .spin { animation: spin 1s linear infinite; }
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-/* ── Scan Frame ──────────────────────────────────── */
+/* Scan Frame*/
 .scanFrame {
   display: flex;
   flex-direction: column;
@@ -187,7 +185,7 @@
   min-height: 28px;
 }
 
-/* ── Pages action (emprunt / retour) ──────────────── */
+/* Pages action (emprunt / retour) */
 .actionPage {
   display: flex;
   flex-direction: column;
@@ -212,7 +210,7 @@
 
 .actionTitle { font-size: 1.15rem; font-weight: 700; color: #111827; margin: 0; }
 
-/* ── Book cards ───────────────────────────────────── */
+/* Book cards */
 .bookCard {
   display: flex;
   align-items: center;
@@ -241,7 +239,7 @@
 .bookCardSub     { font-size: 0.8rem; color: #6B7280; margin: 2px 0 0; }
 .bookCardToken   { font-family: monospace; font-size: 0.72rem; color: #9CA3AF; margin: 4px 0 0; }
 
-/* ── Formulaire ───────────────────────────────────── */
+/* Formulaire */
 .formSection {
   background: white;
   border-radius: 14px;
@@ -297,7 +295,7 @@
   font-size: 0.875rem;
 }
 
-/* ── Loan details ─────────────────────────────────── */
+/*  Loan details*/
 .loanDetails {
   background: white;
   border-radius: 14px;
@@ -320,7 +318,7 @@
 .late   { color: #DC2626; }
 .normal { color: #111827; }
 
-/* ── Boutons principaux ────────────────────────────── */
+/* Boutons principaux */
 .confirmBtn {
   width: 100%;
   padding: 16px;
@@ -362,7 +360,7 @@
 .reserveBtn:active { background: #EEF2FF; }
 .reserveHint { font-size: 0.85rem; color: #6B7280; margin: -6px 0 4px; }
 
-/* ── Success ──────────────────────────────────────── */
+/* Success */
 .successPage {
   display: flex;
   flex-direction: column;
@@ -384,9 +382,7 @@
 .successPage h2 { font-size: 1.4rem; font-weight: 700; color: #111827; margin: 0; }
 .successPage p  { color: #6B7280; margin: 0; max-width: 280px; font-size: 0.95rem; }
 
-/* ═══════════════════════════════════════════════════════
-   RESPONSIVE MOBILE
-═══════════════════════════════════════════════════════ */
+/* RESPONSIVE MOBILE */
 @media (max-width: 480px) {
   .page { padding: 12px; }
   .scanTitle h1 { font-size: 1.1rem; }

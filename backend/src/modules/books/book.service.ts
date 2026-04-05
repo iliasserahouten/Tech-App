@@ -69,7 +69,6 @@ export class BookService {
 
     await this.ensureClassroomOwnership(teacherId, classroomId);
 
-    // Utiliser le qrToken fourni ou en générer un lisible automatiquement
     const qrToken = dto.qrToken?.trim() || await this.generateQrToken();
 
     const created = await this.repo.create(classroomId, qrToken, {

@@ -1,170 +1,64 @@
-# 📚 Tech-App – Gestion des emprunts de livres scolaires
+# Ma Bibliothèque
 
-## 🧠 Contexte du projet
+Application web de gestion des emprunts de livres scolaires.
 
-Ce projet technique a pour objectif de **dématérialiser la gestion des emprunts et des restitutions de livres** dans les classes d’écoles.
+## Stack technique
 
-Aujourd’hui, ces processus sont souvent réalisés manuellement, ce qui engendre une perte de temps pour les enseignants. L’application **Tech-App** vise à simplifier, automatiser et fiabiliser cette gestion grâce à une solution web moderne.
+- **Frontend** : React + Vite + TypeScript
+- **Backend** : Node.js + Express + TypeScript
+- **Base de données** : PostgreSQL + Prisma ORM
+- **Authentification** : JWT
 
----
+## Démo en ligne
 
-## 🎯 Objectifs principaux
+- **Application** : https://ma-bibliotheque-lyart.vercel.app
+- **API** : https://ma-bibliotheque-backend.onrender.com
 
-* Réduire le temps consacré à la gestion des livres
-* Centraliser les informations (écoles, classes, élèves, livres)
-* Faciliter les emprunts et retours via QR Code
-* Offrir une vue claire de l’état des livres (disponibles / empruntés)
+## Compte de démonstration
 
----
+- **Email** : demo@bibliotheque.fr
+- **Mot de passe** : demo1234
 
-## 🏗️ Architecture globale (Frontend / Backend / Database)
-![archi](images/architecture.png)
+## Installation locale
 
----
-
-## 👤 Utilisateurs cibles
-
-* Enseignants
-* Intervenants dans une ou plusieurs écoles
-* Enseignants ayant plusieurs classes selon les jours
-
----
-
-## ⚙️ Fonctionnalités
-
-### 🏫 Gestion du référentiel scolaire
-
-* Création et gestion d’écoles
-* Association d’une ou plusieurs classes à une école
-* Association des classes à des jours de la semaine
-* Gestion des élèves par classe (nom, prénom)
-* Sélection automatique de la classe par défaut selon le jour
-
----
-
-### 📘 Gestion des livres
-
-* Création de fiches livres :
-
-  * Titre
-  * Univers
-  * Éditeur
-* Association d’un livre à une classe
-* Génération d’un **QRCode unique** par livre
-* Export PDF pour impression des QR Codes
-
----
-
-### 🔁 Gestion des emprunts et retours
-
-* Emprunt via scan du QR Code depuis un smartphone
-* Sélection de l’élève emprunteur
-* Définition d’une date de retour
-* Notification en cas de retard
-* Retour automatique via scan du QR Code
-* Historique des emprunts par livre
-* Réservation anticipée d’un livre déjà emprunté
-
----
-
-### 📊 Suivi et consultation
-
-* Vue globale des livres
-* Statut : disponible / emprunté
-* Filtres :
-
-  * Par école
-  * Par classe
-  * Par élève
-
----
-
-## 🛠️ Stack technique
-
-### Frontend
-
-* React
-* Vite
-* TypeScript
+### Prérequis
+- Node.js >= 20
+- Docker (pour PostgreSQL)
 
 ### Backend
-
-* Node.js
-* Express
-* TypeScript
-
-### Base de données
-
-* SQL (PostgreSQL)
-
-### Autres outils
-
-* Git & GitHub
-* QR Code generator
-* PDF generation
-
----
-
-## 📂 Architecture du projet
-
-```text
-Tech-App/
- ├─ Backend/
- │   ├─ src/
- │   │   ├─ app.ts
- │   │   ├─ server.ts
- │   │   ├─ routes/
- │   │   ├─ controllers/
- │   │   ├─ services/
- │   │   └─ models/
- │   └─ package.json
- │
- ├─ frontend/
- │   ├─ src/
- │   ├─ public/
- │   └─ package.json
- │
- └─ README.md
+```bash
+cd backend
+cp .env.example .env
+npm install
+npx prisma migrate deploy
+npx prisma db seed
+npm run dev
 ```
 
----
+### Frontend
+```bash
+cd Frontend
+npm install
+npm run dev
+```
 
-## 🗺️ Feuille de route (Roadmap)
+## Variables d'environnement
 
-### Phase 1 – Conception
+### Backend (.env)
+DATABASE_URL="postgresql://postgres:password@localhost:5432/school_library"
+DIRECT_URL="postgresql://postgres:password@localhost:5432/school_library"
+JWT_SECRET="votre-secret"
+JWT_EXPIRES_IN="1h"
+PORT="3000"
 
-*
+### Frontend (.env.local)
+VITE_API_URL="http://localhost:3000/api"
 
-### Phase 2 – Mise en place technique
+## Fonctionnalités
 
-*
-
-### Phase 3 – Fonctionnalités cœur
-
-*
-
-### Phase 4 – Emprunts & retours
-
-*
-
-### Phase 5 – Finalisation
-
-*
-
----
-
-## 🚀 Déploiement
-
-L’application sera déployée sur un hébergement gratuit afin de fournir un projet complet et accessible.
-
----
-
-## 📬 Contact
-
-Pour toute question ou difficulté rencontrée au cours du développement, un point d’avancement pourra être organisé.
-
----
-
-## 📝 Licence
-
-Projet réalisé dans un cadre pédagogique.
+- Gestion des écoles, classes et élèves
+- Catalogue de livres avec génération de QR codes
+- Scanner QR code pour emprunts et retours
+- Tableau de bord avec statistiques
+- Historique des opérations
+- Interface responsive mobile/desktop

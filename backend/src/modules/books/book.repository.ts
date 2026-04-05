@@ -25,7 +25,7 @@ export class BookRepository {
         qrToken,
         classroomId,
       },
-      include: bookInclude, // ← ajouter
+      include: bookInclude, 
     });
   }
 
@@ -33,21 +33,21 @@ export class BookRepository {
     return prisma.book.findMany({
       where: { classroomId },
       orderBy: { createdAt: "desc" },
-      include: bookInclude, // ← ajouter
+      include: bookInclude,  
     });
   }
 
   findById(id: string) {
     return prisma.book.findUnique({
       where: { id },
-      include: bookInclude, // ← ajouter
+      include: bookInclude,  
     });
   }
 
   findByQrToken(qrToken: string) {
     return prisma.book.findUnique({
       where: { qrToken },
-      include: bookInclude, // ← ajouter
+      include: bookInclude,  
     });
   }
 
@@ -59,7 +59,7 @@ export class BookRepository {
         ...(dto.universe !== undefined ? { universe: dto.universe ?? null } : {}),
         ...(dto.publisher !== undefined ? { publisher: dto.publisher ?? null } : {}),
       },
-      include: bookInclude, // ← ajouter
+      include: bookInclude,  
     });
   }
 

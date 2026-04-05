@@ -11,7 +11,7 @@ function extractArray<T>(response: any): T[] {
 
 export const studentsService = {
 
-  // Élèves d'une classe → { data: [...] }
+  // Élèves d'une classe 
   async getStudentsByClassroom(classroomId: string): Promise<Student[]> {
     const response = await api.get(`/classrooms/${classroomId}/students`);
     return extractArray<Student>(response);

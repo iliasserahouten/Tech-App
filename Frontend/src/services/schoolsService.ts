@@ -11,13 +11,13 @@ function extractArray<T>(response: any): T[] {
 
 export const schoolsService = {
 
-  // Liste des écoles → { data: [...] }
+  // Liste des écoles 
   async getMySchools(): Promise<School[]> {
     const response = await api.get('/schools');
     return extractArray<School>(response);
   },
 
-  // Créer une école → { data: {...} }
+  // Créer une école 
   async createSchool(data: {
     name: string;
     city?: string;

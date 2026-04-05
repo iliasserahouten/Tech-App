@@ -133,7 +133,6 @@ export class LoanRepository {
     return prisma.loan.findMany({
       where,
       orderBy: { borrowedAt: "desc" },
-      // ✅ FIX : include ajouté — sans ça book et student sont undefined
       include: {
         book: {
           select: {

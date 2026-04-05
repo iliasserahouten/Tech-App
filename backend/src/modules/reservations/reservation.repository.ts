@@ -2,7 +2,6 @@ import prisma from "../../config/prisma";
 
 export class ReservationRepository {
 
-  // ✅ Inclut classroom + school pour pouvoir vérifier la même classe/école
   findBookByQrForTeacher(teacherId: string, qrToken: string) {
     return prisma.book.findFirst({
       where: { qrToken, classroom: { school: { teacherId } } },
@@ -18,7 +17,6 @@ export class ReservationRepository {
     });
   }
 
-  // ✅ Inclut classroom + school pour pouvoir vérifier la même classe/école
   findStudentForTeacher(teacherId: string, studentId: string) {
     return prisma.student.findFirst({
       where: { id: studentId, classroom: { school: { teacherId } } },

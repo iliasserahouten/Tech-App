@@ -37,7 +37,6 @@ export class SchoolRepository {
   }
 
   async deleteById(id: string, teacherId: string) {
-    // Ensure ownership before delete
     const existing = await this.findById(id, teacherId);
     if (!existing) return null;
 

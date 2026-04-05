@@ -18,7 +18,6 @@ dotenv.config();
 
 const app = express();
 
-// ─── CORS ─────────────────────────────────────────────────────────────────────
 const corsOptions: cors.CorsOptions = {
   origin: (origin, callback) => {
     if (!origin) return callback(null, true);
@@ -31,15 +30,7 @@ const corsOptions: cors.CorsOptions = {
 
     if (allowed.includes(origin)) return callback(null, true);
 
-    // IP réseau local → tests mobile sur WiFi
-    const isLocalNetwork = /^https?:\/\/(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/
-      .test(origin);
-    if (isLocalNetwork) return callback(null, true);
-
-    // Tunnel ngrok
-    if (origin.includes("ngrok")) return callback(null, true);
-
-    callback(new Error(`CORS bloqué pour : ${origin}`));
+    callback(new Error(`CORS blocked for origin: ${origin}`));
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
@@ -47,36 +38,31 @@ const corsOptions: cors.CorsOptions = {
 };
 
 app.use(cors(corsOptions));
-
-// ✅ Fix Express 5 : "/{*path}" au lieu de "*"
 app.options("/{*path}", cors(corsOptions));
-// ──────────────────────────────────────────────────────────────────────────────
-
 app.use(express.json());
 
-// public
+// Public routes
 app.use("/api", authRoutes);
 
 app.get("/health", (_req, res) => {
   res.json({ status: "OK" });
 });
 
-// protected
+// Protected routes
 app.use("/api/schools", requireAuth, schoolRoutes);
 app.use("/api/schools", requireAuth, classroomRoutes);
-app.use("/api",         requireAuth, classroomRoutes);
-app.use("/api",         requireAuth, studentRoutes);
-app.use("/api",         requireAuth, bookRoutes);
-app.use("/api",         requireAuth, loanRoutes);
-app.use("/api",         requireAuth, reservationRoutes);
-app.use("/api",         requireAuth, qrcodeRoutes);
-app.use("/api",         requireAuth, statsRoutes);
-app.use("/api",         requireAuth, classScheduleRoutes);
+app.use("/api", requireAuth, classroomRoutes);
+app.use("/api", requireAuth, studentRoutes);
+app.use("/api", requireAuth, bookRoutes);
+app.use("/api", requireAuth, loanRoutes);
+app.use("/api", requireAuth, reservationRoutes);
+app.use("/api", requireAuth, qrcodeRoutes);
+app.use("/api", requireAuth, statsRoutes);
+app.use("/api", requireAuth, classScheduleRoutes);
 
-// error handler LAST
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });

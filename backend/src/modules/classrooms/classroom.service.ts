@@ -54,7 +54,7 @@ export class ClassroomService {
       orderBy: { name: "asc" },
     });
 
-    // Aplatir toutes les classes en incluant le nom de l'école
+
     const classrooms = schools.flatMap(school =>
       school.classrooms.map(c => ({ ...c, school: { name: school.name } }))
     );

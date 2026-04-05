@@ -1,6 +1,3 @@
-/* ═══════════════════════════════════════════════════════
-   LAYOUT
-═══════════════════════════════════════════════════════ */
 .layoutContainer {
   display: flex;
   flex-direction: column;
@@ -8,51 +5,6 @@
   background: #F3F4F6;
 }
 
-/* ── Bannière PWA install ──────────────────────────── */
-.installBanner {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem 1rem;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
-  color: white;
-  position: sticky;
-  top: 0;
-  z-index: 200;
-  box-shadow: 0 2px 8px rgba(99,102,241,0.4);
-  animation: slideDown 0.3s ease;
-}
-@keyframes slideDown {
-  from { transform: translateY(-100%); opacity: 0; }
-  to   { transform: translateY(0);     opacity: 1; }
-}
-.installIcon  { flex-shrink: 0; }
-.installText  { flex: 1; display: flex; flex-direction: column; line-height: 1.3; min-width: 0; }
-.installText strong { font-size: 0.9rem; font-weight: 700; }
-.installText span   { font-size: 0.78rem; opacity: 0.9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.installBtn {
-  flex-shrink: 0;
-  padding: 0.4rem 1rem;
-  background: white;
-  color: #6366f1;
-  border: none;
-  border-radius: 20px;
-  font-weight: 700;
-  font-size: 0.85rem;
-  cursor: pointer;
-}
-.installBtn:active { transform: scale(0.96); }
-.installDismiss {
-  background: transparent;
-  border: none;
-  color: rgba(255,255,255,0.8);
-  cursor: pointer;
-  font-size: 1rem;
-  padding: 0.25rem;
-  flex-shrink: 0;
-}
-
-/* ── Header desktop ────────────────────────────────── */
 .header {
   background: white;
   border-bottom: 2px solid #E5E7EB;
@@ -99,8 +51,8 @@
   transition: all 0.2s ease;
   white-space: nowrap;
 }
-.navItem:hover    { background: #F3F4F6; color: #111827; }
-.navItemActive    { background: #EEF2FF; color: #6366f1; }
+.navItem:hover { background: #F3F4F6; color: #111827; }
+.navItemActive { background: #EEF2FF; color: #6366f1; }
 
 .userSection {
   display: flex;
@@ -125,6 +77,8 @@
   font-weight: bold;
   font-size: 1rem;
   flex-shrink: 0;
+  border: none;
+  cursor: pointer;
 }
 .userDetails { display: flex; flex-direction: column; }
 .userName {
@@ -153,21 +107,14 @@
 }
 .logoutButton:hover { background: #FCA5A5; }
 
-/* ── Main content ──────────────────────────────────── */
 .mainContent {
   flex: 1;
   width: 100%;
 }
 
-/* ── Bottom Nav : caché sur desktop ────────────────── */
 .bottomNav { display: none; }
 
-/* ═══════════════════════════════════════════════════════
-   MOBILE  ≤ 768px
-═══════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
-
-  /* Cacher nav desktop */
   .navigation        { display: none; }
   .userName          { display: none; }
   .logoutButton span { display: none; }
@@ -178,12 +125,10 @@
   }
   .logoText { font-size: 1.1rem; }
 
-  /* Laisser de la place pour la bottom nav */
   .mainContent {
     padding-bottom: calc(68px + env(safe-area-inset-bottom));
   }
 
-  /* ── Bottom Nav ── */
   .bottomNav {
     display: flex;
     position: fixed;
@@ -222,7 +167,6 @@
     line-height: 1;
   }
 
-  /* Bouton Scan central surélevé */
   .bottomNavScan {
     color: #6366f1;
     margin-top: -16px;
@@ -242,14 +186,5 @@
   .bottomNavScan:active .scanBubble { transform: scale(0.9); }
   .bottomNavItemActive.bottomNavScan .scanBubble {
     background: linear-gradient(135deg, #4f46e5, #7c3aed);
-  }
-}
-
-/* ═══════════════════════════════════════════════════════
-   PWA standalone (app installée)
-═══════════════════════════════════════════════════════ */
-@media (display-mode: standalone) {
-  .header {
-    padding-top: env(safe-area-inset-top);
   }
 }

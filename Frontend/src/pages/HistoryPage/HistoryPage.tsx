@@ -11,7 +11,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import styles from './HistoryPage.module.css';
 
-// ── Badge statut ──────────────────────────────────────────────────────────────
+//    Badge statut                                                               
 function LoanStatusBadge({ status }: { status: LoanStatus }) {
   const map: Record<LoanStatus, { label: string; className: string; Icon: any }> = {
     ACTIVE:   { label: 'En cours',  className: styles.badgeActive,   Icon: Clock },
@@ -31,7 +31,7 @@ function fmtDate(iso: string | null | undefined) {
   return format(new Date(iso), 'd MMM yyyy', { locale: fr });
 }
 
-// ── Carte mobile pour un emprunt ──────────────────────────────────────────────
+//    Carte mobile pour un emprunt         
 function LoanCard({ loan }: { loan: Loan }) {
   return (
     <div className={`${styles.card} ${loan.status === 'LATE' ? styles.cardLate : ''}`}>
@@ -84,7 +84,7 @@ function LoanCard({ loan }: { loan: Loan }) {
   );
 }
 
-// ── Page principale ───────────────────────────────────────────────────────────
+// Page principale 
 export default function HistoryPage() {
   const [loans, setLoans]           = useState<Loan[]>([]);
   const [classrooms, setClassrooms] = useState<Classroom[]>([]);
@@ -251,7 +251,7 @@ export default function HistoryPage() {
         </div>
       ) : (
         <>
-          {/* ── DESKTOP : tableau ── */}
+          {/*    DESKTOP : tableau    */}
           <div className={styles.table}>
             <div className={`${styles.row} ${styles.rowHead}`}>
               <span className={styles.colBook}>Livre</span>
@@ -292,7 +292,7 @@ export default function HistoryPage() {
             ))}
           </div>
 
-          {/* ── MOBILE : cartes ── */}
+          {/*    MOBILE : cartes    */}
           <div className={styles.cardList}>
             {filtered.map(loan => <LoanCard key={loan.id} loan={loan} />)}
           </div>

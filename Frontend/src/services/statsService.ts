@@ -13,7 +13,7 @@ export const statsService = {
     return extract<DashboardStats>(response);
   },
 
-  // Stats par classe ← nouveau
+  // Stats par classe 
   async getClassroomStats(classroomId: string): Promise<{
     totalBooks: number;
     totalStudents: number;

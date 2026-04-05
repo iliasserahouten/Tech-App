@@ -9,7 +9,6 @@
 }
 
 html {
-  /* Empêche le zoom sur double-tap iOS */
   touch-action: manipulation;
 }
 
@@ -23,13 +22,11 @@ body {
   overflow-x: hidden;
 }
 
-/* Tous les boutons : pas de highlight bleu au tap sur mobile */
 button {
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
 }
 
-/* Inputs : empêche le zoom automatique iOS (taille min 16px) */
 input, select, textarea {
   font-size: 16px !important;
 }

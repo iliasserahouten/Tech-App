@@ -55,7 +55,6 @@ export class QrCodeService {
       doc.fontSize(9).fillColor("gray").text(b.qrToken, x, y + qrSize + 26, { width: qrSize });
       doc.fillColor("black");
 
-      // Next cell
       col++;
       if (col >= cols) {
         col = 0;
@@ -65,7 +64,6 @@ export class QrCodeService {
         x += qrSize + gap;
       }
 
-      // New page if needed
       if (y + qrSize + 80 > doc.page.height - doc.page.margins.bottom) {
         doc.addPage();
         x = doc.page.margins.left;

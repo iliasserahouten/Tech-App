@@ -26,8 +26,6 @@ export class ReservationService {
     const student = await this.repo.findStudentForTeacher(teacherId, dto.studentId.trim());
     if (!student) throw new AppError("Student not found", 404);
 
-    // ✅ Même validation que pour les emprunts :
-    // l'élève doit être dans la même classe OU la même école que le livre
     const sameClassroom = book.classroom.id === student.classroom.id;
     const sameSchool    = book.classroom.school.id === student.classroom.school.id;
 

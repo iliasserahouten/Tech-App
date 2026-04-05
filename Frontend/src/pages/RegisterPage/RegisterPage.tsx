@@ -97,7 +97,6 @@ export default function RegisterPage() {
             </div>
             {errors.firstName && (
               <p className={styles.errorMessage}>
-                <span>⚠️</span>
                 {errors.firstName.message}
               </p>
             )}
@@ -122,7 +121,6 @@ export default function RegisterPage() {
             </div>
             {errors.lastName && (
               <p className={styles.errorMessage}>
-                <span>⚠️</span>
                 {errors.lastName.message}
               </p>
             )}
@@ -151,7 +149,6 @@ export default function RegisterPage() {
             </div>
             {errors.email && (
               <p className={styles.errorMessage}>
-                <span>⚠️</span>
                 {errors.email.message}
               </p>
             )}
@@ -180,7 +177,6 @@ export default function RegisterPage() {
             </div>
             {errors.password && (
               <p className={styles.errorMessage}>
-                <span>⚠️</span>
                 {errors.password.message}
               </p>
             )}
@@ -207,7 +203,6 @@ export default function RegisterPage() {
             </div>
             {errors.confirmPassword && (
               <p className={styles.errorMessage}>
-                <span>⚠️</span>
                 {errors.confirmPassword.message}
               </p>
             )}

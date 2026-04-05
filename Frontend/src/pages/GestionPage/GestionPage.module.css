@@ -1,11 +1,8 @@
-/* ═══════════════════════════════════════════════════════
-   GESTION PAGE
-═══════════════════════════════════════════════════════ */
+
 .page {
   padding: 16px;
   max-width: 900px;
   margin: 0 auto;
-  /* place pour la bottom nav mobile + FAB */
   padding-bottom: 100px;
 }
 .loading { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 300px; gap: 12px; color: #6B7280; }
@@ -93,7 +90,7 @@
   padding: 12px;
   border: 1px solid #E5E7EB;
   border-radius: 10px;
-  font-size: 16px; /* empêche zoom iOS */
+  font-size: 16px; 
   background: #F9FAFB;
   outline: none;
   min-height: 48px;

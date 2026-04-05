@@ -18,7 +18,7 @@ function addDays(days: number): string {
   return d.toISOString().split('T')[0];
 }
 
-// ── Phase 1 : Scanner QR ─────────────────────────────────────────────────────
+// Scanner QR 
 function ScanFrame({ onScan }: { onScan: (code: string) => void }) {
   const [manual, setManual]             = useState('');
   const [cameraActive, setCameraActive] = useState(false);
@@ -26,7 +26,7 @@ function ScanFrame({ onScan }: { onScan: (code: string) => void }) {
   const [scanning, setScanning]         = useState(false);
   const scannerRef = useRef<Html5Qrcode | null>(null);
 
-  // ── Démarrer la caméra ────────────────────────────────────────────────────
+  //  Démarrer la caméra 
   const startCamera = async () => {
     setCameraError('');
     setScanning(false);
@@ -34,16 +34,13 @@ function ScanFrame({ onScan }: { onScan: (code: string) => void }) {
       const scanner = new Html5Qrcode('qr-reader');
       scannerRef.current = scanner;
       await scanner.start(
-        // 'environment' = caméra arrière sur mobile
         { facingMode: 'environment' },
         {
           fps: 15,
           qrbox: { width: 240, height: 240 },
-          // Réduire le délai entre scans (évite les doubles lectures)
           disableFlip: false,
         },
         (decodedText) => {
-          // Vibration tactile sur mobile (si supporté)
           if ('vibrate' in navigator) navigator.vibrate(80);
           stopCamera();
           onScan(decodedText.trim().toUpperCase());
@@ -52,7 +49,6 @@ function ScanFrame({ onScan }: { onScan: (code: string) => void }) {
       );
       setCameraActive(true);
     } catch (err: any) {
-      // Erreur caméra : message adapté selon le cas
       if (err?.name === 'NotAllowedError') {
         setCameraError('Accès à la caméra refusé. Autorisez l\'accès dans les paramètres de votre navigateur.');
       } else if (err?.name === 'NotFoundError') {
@@ -63,7 +59,7 @@ function ScanFrame({ onScan }: { onScan: (code: string) => void }) {
     }
   };
 
-  // ── Arrêter la caméra ─────────────────────────────────────────────────────
+  // Arrêter la caméra 
   const stopCamera = async () => {
     if (scannerRef.current) {
       try { await scannerRef.current.stop(); } catch { /* ignoré */ }
@@ -77,7 +73,7 @@ function ScanFrame({ onScan }: { onScan: (code: string) => void }) {
     return () => { stopCamera(); };
   }, []);
 
-  // ── Démarrage automatique de la caméra ────────────────────────────────────
+  //  Démarrage automatique de la caméra 
   // Sur mobile (PWA), la caméra s'ouvre automatiquement
   useEffect(() => {
     const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
@@ -166,7 +162,7 @@ function ScanFrame({ onScan }: { onScan: (code: string) => void }) {
   );
 }
 
-// ── Phase 2 : Formulaire d'emprunt ───────────────────────────────────────────
+// Formulaire d'emprunt 
 function EmpruntForm({
   book,
   onBack,
@@ -296,7 +292,7 @@ function EmpruntForm({
   );
 }
 
-// ── Phase 3 : Formulaire de retour ───────────────────────────────────────────
+// Formulaire de retour 
 function RetourForm({
   book, loan, onBack, onSuccess,
 }: {
@@ -485,7 +481,7 @@ function RetourForm({
   );
 }
 
-// ── Écran de succès ───────────────────────────────────────────────────────────
+// Écran de succès 
 function SuccessScreen({ message, onReset }: { message: string; onReset: () => void }) {
   return (
     <div className={styles.successPage}>
@@ -501,7 +497,7 @@ function SuccessScreen({ message, onReset }: { message: string; onReset: () => v
   );
 }
 
-// ── Page principale ───────────────────────────────────────────────────────────
+// Page principale 
 type Phase = 'scan' | 'emprunt' | 'retour' | 'success';
 
 export default function ScanPage() {

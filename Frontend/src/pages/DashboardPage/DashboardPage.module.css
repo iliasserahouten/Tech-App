@@ -1,6 +1,4 @@
-/* ═══════════════════════════════════════════════════════
-   DASHBOARD PAGE
-═══════════════════════════════════════════════════════ */
+
 .dashboard  { padding: 0; max-width: 100%; background: #F3F4F6; min-height: 100vh; }
 
 .loadingContainer {
@@ -146,9 +144,7 @@
 .loanDue     { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; color: #F59E0B; font-weight: 500; }
 .noDueDate   { color: #9CA3AF; font-size: 0.875rem; font-style: italic; }
 
-/* ═══════════════════════════════════════════════════════
-   MOBILE
-═══════════════════════════════════════════════════════ */
+/* MOBILE */
 @media (max-width: 768px) {
   .header,
   .kpiSection,

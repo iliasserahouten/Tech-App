@@ -39,7 +39,7 @@ export const classroomsService = {
     }
   },
 
-  // ✅ Créer une classe (CORRIGÉ)
+  //  Créer une classe 
   async createClassroom(data: {
     name: string;
     grade?: string;

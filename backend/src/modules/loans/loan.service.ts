@@ -23,7 +23,6 @@ export class LoanService {
     if (!dto.qrToken?.trim()) throw new AppError("qrToken is required", 400);
     if (!dto.studentId?.trim()) throw new AppError("studentId is required", 400);
 
-    // 🔹 transaction pour éviter double emprunt
     return this.repo.prisma.$transaction(async (tx) => {
       const book = await this.repo.findBookByQrForTeacher(teacherId, dto.qrToken.trim(), tx);
       if (!book) throw new AppError("Book not found", 404);
@@ -31,7 +30,7 @@ export class LoanService {
       const student = await this.repo.findStudentForTeacher(teacherId, dto.studentId.trim(), tx);
       if (!student) throw new AppError("Student not found", 404);
 
-      // 🚨 🔥 VALIDATION MÉTIER CRITIQUE
+
       const sameClassroom = book.classroom.id === student.classroom.id;
       const sameSchool = book.classroom.school.id === student.classroom.school.id;
 

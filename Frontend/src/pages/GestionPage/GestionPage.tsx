@@ -92,7 +92,7 @@ export default function GestionPage() {
   const toggleSchool    = (id: string) => setOpenSchools(p => p.includes(id) ? p.filter(i => i !== id) : [...p, id]);
   const toggleClassroom = (id: string) => setOpenClassrooms(p => p.includes(id) ? p.filter(i => i !== id) : [...p, id]);
 
-  // ─── ÉCOLE ────────────────────────────────────────────────────────────────
+  // ÉCOLE 
   const addSchool = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true); setFormError('');
@@ -100,15 +100,13 @@ export default function GestionPage() {
       const s = await schoolsService.createSchool({ name: fSchool.name, city: fSchool.city || undefined });
       setSchools(p => {
         const updated = [...p, s];
-        // ✅ FIX : si c'est la première école créée, l'utiliser comme valeur par défaut
-        // pour le formulaire de création de classe
+
         if (updated.length === 1) {
           setFClassroom(f => ({ ...f, schoolId: s.id }));
         }
         return updated;
       });
-      // ✅ FIX : toujours mettre à jour schoolId avec l'école qu'on vient de créer
-      // (l'utilisateur voudra probablement créer une classe dans cette école)
+
       setFClassroom(f => ({ ...f, schoolId: s.id }));
       setFSchool({ name: '', city: '' });
       setModal(null);
@@ -116,12 +114,11 @@ export default function GestionPage() {
     finally { setSaving(false); }
   };
 
-  // ─── CLASSE ───────────────────────────────────────────────────────────────
+  // CLASSE 
   const addClassroom = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true); setFormError('');
 
-    // ✅ FIX : validation explicite — évite POST /schools//classrooms (URL cassée)
     if (!fClassroom.schoolId) {
       setFormError('Veuillez sélectionner une école. Créez d\'abord une école si nécessaire.');
       setSaving(false);
@@ -137,8 +134,7 @@ export default function GestionPage() {
 
       setClassrooms(p => {
         const updated = [...p, c];
-        // ✅ FIX : si c'est la première classe créée, l'utiliser comme valeur par défaut
-        // pour les formulaires élève et planning
+
         if (updated.length === 1) {
           setFStudent(f => ({ ...f, classroomId: c.id }));
           setFSchedule(f => ({ ...f, classroomId: c.id }));
@@ -146,7 +142,7 @@ export default function GestionPage() {
         return updated;
       });
 
-      // ✅ FIX : toujours mettre à jour classroomId avec la classe qu'on vient de créer
+
       setFStudent(f => ({ ...f, classroomId: c.id }));
       setFSchedule(f => ({ ...f, classroomId: c.id }));
 
@@ -156,12 +152,11 @@ export default function GestionPage() {
     finally { setSaving(false); }
   };
 
-  // ─── ÉLÈVE ────────────────────────────────────────────────────────────────
+  // ÉLÈVE 
   const addStudent = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true); setFormError('');
 
-    // ✅ FIX : validation explicite — évite POST /classrooms//students (URL cassée)
     if (!fStudent.classroomId) {
       setFormError('Veuillez sélectionner une classe. Créez d\'abord une classe si nécessaire.');
       setSaving(false);
@@ -181,21 +176,19 @@ export default function GestionPage() {
     finally { setSaving(false); }
   };
 
-  // ─── SUPPRESSION ──────────────────────────────────────────────────────────
+  //  SUPPRESSION 
   const deleteSchool = async (id: string) => {
     if (!window.confirm('Supprimer cette école et toutes ses classes ?')) return;
     try {
       await schoolsService.deleteSchool(id);
       setSchools(p => {
         const updated = p.filter(s => s.id !== id);
-        // Mettre à jour schoolId si on supprime l'école sélectionnée
         setFClassroom(f => ({
           ...f,
           schoolId: f.schoolId === id ? (updated[0]?.id ?? '') : f.schoolId,
         }));
         return updated;
       });
-      // Retirer aussi les classes et élèves orphelins du state local
       const removedClassroomIds = classrooms.filter(c => c.schoolId === id).map(c => c.id);
       setClassrooms(p => {
         const updated = p.filter(c => c.schoolId !== id);
@@ -219,7 +212,6 @@ export default function GestionPage() {
       await classroomsService.deleteClassroom(id);
       setClassrooms(p => {
         const updated = p.filter(c => c.id !== id);
-        // Mettre à jour classroomId si on supprime la classe sélectionnée
         setFStudent(f => ({
           ...f,
           classroomId: f.classroomId === id ? (updated[0]?.id ?? '') : f.classroomId,
@@ -239,7 +231,7 @@ export default function GestionPage() {
     catch { alert('Erreur lors de la suppression'); }
   };
 
-  // ─── PLANNING ─────────────────────────────────────────────────────────────
+  // PLANNING 
   const addSchedule = async () => {
     if (!fSchedule.classroomId) return;
     setSaving(true); setFormError('');
@@ -261,7 +253,7 @@ export default function GestionPage() {
     }
   };
 
-  // ─── FILTRAGE RECHERCHE ───────────────────────────────────────────────────
+  // FILTRAGE RECHERCHE 
   const filteredSchools = schools.filter(s =>
     s.name.toLowerCase().includes(search.toLowerCase()) ||
     s.city?.toLowerCase().includes(search.toLowerCase()) ||
@@ -424,7 +416,7 @@ export default function GestionPage() {
         </button>
       </div>
 
-      {/* ── Modales ── */}
+      {/*    Modales    */}
 
       {/* MODAL ÉCOLE */}
       {modal === 'school' && (
@@ -451,7 +443,6 @@ export default function GestionPage() {
         <Modal title="Nouvelle Classe" onClose={() => { setModal(null); setFormError(''); }}>
           {formError && <div className={styles.formError}><AlertCircle size={14} />{formError}</div>}
 
-          {/* ✅ FIX : message d'alerte si aucune école n'existe encore */}
           {schools.length === 0 ? (
             <div className={styles.formError}>
               <AlertCircle size={14} />
@@ -465,13 +456,11 @@ export default function GestionPage() {
               </div>
               <div className={styles.formGroup}>
                 <label>École *</label>
-                {/* ✅ FIX : le select met bien à jour schoolId via onChange */}
                 <select
                   value={fClassroom.schoolId}
                   onChange={e => setFClassroom({ ...fClassroom, schoolId: e.target.value })}
                   required
                 >
-                  {/* ✅ FIX : option vide initiale pour forcer le choix si schoolId est '' */}
                   {!fClassroom.schoolId && <option value="">— Choisir une école —</option>}
                   {schools.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                 </select>
@@ -489,7 +478,7 @@ export default function GestionPage() {
         <Modal title="Nouvel Élève" onClose={() => { setModal(null); setFormError(''); }}>
           {formError && <div className={styles.formError}><AlertCircle size={14} />{formError}</div>}
 
-          {/* ✅ FIX : message d'alerte si aucune classe n'existe encore */}
+
           {classrooms.length === 0 ? (
             <div className={styles.formError}>
               <AlertCircle size={14} />
@@ -507,13 +496,12 @@ export default function GestionPage() {
               </div>
               <div className={styles.formGroup}>
                 <label>Classe *</label>
-                {/* ✅ FIX : le select met bien à jour classroomId via onChange */}
                 <select
                   value={fStudent.classroomId}
                   onChange={e => setFStudent({ ...fStudent, classroomId: e.target.value })}
                   required
                 >
-                  {/* ✅ FIX : option vide initiale pour forcer le choix si classroomId est '' */}
+
                   {!fStudent.classroomId && <option value="">— Choisir une classe —</option>}
                   {classrooms.map(c => (
                     <option key={c.id} value={c.id}>

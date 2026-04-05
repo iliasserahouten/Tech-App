@@ -73,7 +73,7 @@ export default function DashboardPage() {
     loadDashboardData();
   }, [loadDashboardData]);
 
-  // ← Rechargement automatique à chaque fois qu'on revient sur le Dashboard
+  // Rechargement automatique à chaque fois qu'on revient sur le Dashboard
   useEffect(() => {
     if (location.pathname === '/dashboard') {
       loadDashboardData();

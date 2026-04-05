@@ -56,7 +56,7 @@ export const booksService = {
     await api.delete(`/books/${id}`);
   },
 
-  // Créer un emprunt → POST /api/loans/borrow
+  // Créer un emprunt 
   async createLoan(data: {
     qrToken: string;
     studentId: string;
@@ -66,14 +66,14 @@ export const booksService = {
     return extract<Loan>(response);
   },
 
-  // Retourner un livre → POST /api/loans/return
+  // Retourner un livre
   async returnBook(qrToken: string): Promise<Loan> {
     const response = await api.post('/loans/return', { qrToken });
     return extract<Loan>(response);
   },
 
 async createReservation(data: {
-  qrToken: string;      // ← qrToken au lieu de bookId
+  qrToken: string;     
   studentId: string;
   desiredFrom?: string;
 }): Promise<Reservation> {

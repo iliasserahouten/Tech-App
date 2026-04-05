@@ -6,8 +6,7 @@ import {
 } from 'lucide-react';
 import { booksService } from '../../services/booksService';
 import { studentsService } from '../../services/studentsService';
-import { classroomsService } from '../../services/classroomsService';
-import { Book, Student, Loan, Classroom } from '../../types';
+import { Book, Student, Loan} from '../../types';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import styles from './ScanPage.module.css';

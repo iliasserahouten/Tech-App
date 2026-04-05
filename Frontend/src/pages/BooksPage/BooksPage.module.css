@@ -79,7 +79,7 @@
 .dueDateDetail { color: #D97706; font-weight: 600; }
 
 /* ── Formulaire ── */
-.form { display: flex; flex-direction: column; gap: 14px; }
+.form { display: flex; flex-direction: column; gap: 14px; padding-bottom: 16px; }
 .formGroup { display: flex; flex-direction: column; gap: 6px; }
 .formGroup label { font-size: 0.82rem; font-weight: 600; color: #374151; }
 .formGroup input, .formGroup select { padding: 10px 12px; border: 1px solid #E5E7EB; border-radius: 8px; font-size: 0.9rem; outline: none; background: #F9FAFB; }

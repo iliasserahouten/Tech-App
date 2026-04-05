@@ -368,6 +368,10 @@ export default function BooksPage() {
               </button>
             </>
           )}
+            <button className={styles.addBtn} onClick={() => setShowAdd(true)}>
+          <Plus size={16} />
+          Nouveau livre
+          </button>
         </div>
       </div>
 

@@ -184,21 +184,21 @@ export default function DashboardPage() {
           <div className={styles.statsGrid}>
             <StatCard
               icon={BookOpen}
-              label={`${stats.totalBorrowed} livre${stats.totalBorrowed > 1 ? 's' : ''} Emprunté${stats.totalBorrowed > 1 ? 's' : ''}`}
+              label={` livre${stats.totalBorrowed > 1 ? 's' : ''} Emprunté${stats.totalBorrowed > 1 ? 's' : ''}`}
               value={stats.totalBorrowed}
               color="#3B82F6"
               bgColor="#DBEAFE"
             />
             <StatCard
               icon={AlertCircle}
-              label={`${stats.totalOverdue} Retard${stats.totalOverdue > 1 ? 's' : ''}`}
+              label={` Retard${stats.totalOverdue > 1 ? 's' : ''}`}
               value={stats.totalOverdue}
               color="#EF4444"
               bgColor="#FEE2E2"
             />
             <StatCard
               icon={CheckCircle}
-              label={`${stats.totalAvailable} livre${stats.totalAvailable > 1 ? 's' : ''} disponible${stats.totalAvailable > 1 ? 's' : ''}`}
+              label={` livre${stats.totalAvailable > 1 ? 's' : ''} disponible${stats.totalAvailable > 1 ? 's' : ''}`}
               value={stats.totalAvailable}
               color="#10B981"
               bgColor="#D1FAE5"

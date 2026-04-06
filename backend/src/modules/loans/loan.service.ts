@@ -71,36 +71,38 @@ export class LoanService {
     });
   }
 
-  async returnBook(teacherId: string, dto: ReturnLoanDto) {
-    if (!dto.qrToken?.trim()) throw new AppError("qrToken is required", 400);
+async returnBook(teacherId: string, dto: ReturnLoanDto) {
+  if (!dto.qrToken?.trim()) throw new AppError("qrToken is required", 400);
+  return this.repo.prisma.$transaction(async (tx) => {
+    const book = await this.repo.findBookByQrForTeacher(teacherId, dto.qrToken.trim(), tx);
+    if (!book) throw new AppError("Book not found", 404);
 
-    return this.repo.prisma.$transaction(async (tx) => {
-      const book = await this.repo.findBookByQrForTeacher(teacherId, dto.qrToken.trim(), tx);
-      if (!book) throw new AppError("Book not found", 404);
+    const active = await this.repo.findActiveLoanByBook(book.id, tx);
+    if (!active) throw new AppError("No active loan found for this book", 409);
 
-      const active = await this.repo.findActiveLoanByBook(book.id, tx);
-      if (!active) throw new AppError("No active loan found for this book", 409);
+    const now = new Date();
+    const status = active.dueAt && active.dueAt.getTime() < now.getTime()
+      ? "LATE"
+      : "RETURNED";
 
-      const now = new Date();
-      const status =
-        active.dueAt && active.dueAt.getTime() < now.getTime()
-          ? "LATE"
-          : "RETURNED";
+    const closed = await this.repo.closeLoan(
+      { loanId: active.id, status, returnedAt: now },
+      tx
+    );
 
-      const closed = await this.repo.closeLoan(
-        {
-          loanId: active.id,
-          status,
-          returnedAt: now,
-        },
-        tx
-      );
-
-      await this.repo.setBookStatus(book.id, "AVAILABLE", tx);
-
-      return toDto(closed);
+    const reservation = await tx.reservation.findFirst({
+      where: { bookId: book.id },
     });
-  }
+
+    await this.repo.setBookStatus(
+      book.id,
+      reservation ? "RESERVED" : "AVAILABLE",
+      tx
+    );
+
+    return toDto(closed);
+  });
+}
 
   async historyByBook(teacherId: string, bookId: string) {
     const exists = await this.repo.findBookByIdForTeacher(teacherId, bookId);

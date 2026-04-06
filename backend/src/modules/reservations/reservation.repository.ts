@@ -32,6 +32,16 @@ export class ReservationRepository {
     });
   }
 
+  findExistingReservation(bookId: string) {
+    return prisma.reservation.findFirst({
+      where: { bookId },
+    });
+  }
+
+  setBookStatus(bookId: string, status: "AVAILABLE" | "LOANED" | "RESERVED") {
+    return prisma.book.update({ where: { id: bookId }, data: { status } });
+  }
+
   createReservation(params: {
     teacherId: string;
     bookId: string;
@@ -63,12 +73,12 @@ export class ReservationRepository {
     });
   }
 
-  findByIdForTeacher(teacherId: string, id: string) {
-    return prisma.reservation.findFirst({
-      where: { id, teacherId },
-      select: { id: true },
-    });
-  }
+findByIdForTeacher(teacherId: string, id: string) {
+  return prisma.reservation.findFirst({
+    where: { id, teacherId },
+    select: { id: true, bookId: true },
+  });
+}
 
   deleteById(id: string) {
     return prisma.reservation.delete({ where: { id } });

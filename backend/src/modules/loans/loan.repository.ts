@@ -33,7 +33,7 @@ export class LoanRepository {
 
   findActiveLoanByBook(bookId: string, tx: any = prisma) {
     return tx.loan.findFirst({
-      where: { bookId, status: "ACTIVE" },
+      where: { bookId, status: { in: ["ACTIVE", "LATE"] } },
       orderBy: { borrowedAt: "desc" },
     });
   }

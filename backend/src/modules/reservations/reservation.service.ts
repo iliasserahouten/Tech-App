@@ -23,25 +23,21 @@ export class ReservationService {
     const book = await this.repo.findBookByQrForTeacher(teacherId, dto.qrToken.trim());
     if (!book) throw new AppError("Book not found", 404);
 
+    if (book.status === "AVAILABLE") {
+      throw new AppError("Book is available, borrow it directly", 400);
+    }
+
+    const existing = await this.repo.findExistingReservation(book.id);
+    if (existing) throw new AppError("A reservation already exists for this book", 409);
+
     const student = await this.repo.findStudentForTeacher(teacherId, dto.studentId.trim());
     if (!student) throw new AppError("Student not found", 404);
 
+    const sameSchool = book.classroom.school.id === student.classroom.school.id;
+    if (!sameSchool) throw new AppError("Student cannot reserve this book (different school)", 403);
+
     const sameClassroom = book.classroom.id === student.classroom.id;
-    const sameSchool    = book.classroom.school.id === student.classroom.school.id;
-
-    if (!sameSchool) {
-        throw new AppError(
-          "Student cannot borrow this book (different school)",
-          403
-        );
-      }
-
-      if (!sameClassroom) {
-        throw new AppError(
-          "Student cannot borrow this book (same school, but different class)",
-          403
-        );
-      }
+    if (!sameClassroom) throw new AppError("Student cannot reserve this book (different class)", 403);
 
     const desiredFrom = dto.desiredFrom ? new Date(dto.desiredFrom) : null;
     if (dto.desiredFrom && isNaN(desiredFrom!.getTime())) {
@@ -66,8 +62,8 @@ export class ReservationService {
   async cancel(teacherId: string, reservationId: string) {
     const exists = await this.repo.findByIdForTeacher(teacherId, reservationId);
     if (!exists) throw new AppError("Reservation not found", 404);
-
     await this.repo.deleteById(reservationId);
+    await this.repo.setBookStatus(exists.bookId as string, "AVAILABLE");
     return { deleted: true };
   }
 }

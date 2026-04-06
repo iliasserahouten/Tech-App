@@ -9,7 +9,7 @@ export class LoanController {
 
   private getTeacherId(req: Request): string {
     const teacherId = req.user!.id;
-    if (!teacherId) throw new AppError("Missing x-teacher-id header", 401);
+    if (!teacherId) throw new AppError("Missing teacher id", 401);
     return teacherId;
   }
 
@@ -43,6 +43,7 @@ export class LoanController {
       return next(err);
     }
   };
+
   listAll = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const teacherId = this.getTeacherId(req);

@@ -481,6 +481,138 @@ function RetourForm({
   );
 }
 
+function ReservedForm({
+  book,
+  onBack,
+  onSuccess,
+}: {
+  book: Book;
+  onBack: () => void;
+  onSuccess: (msg: string) => void;
+}) {
+  const [students, setStudents]     = useState<Student[]>([]);
+  const [studentId, setStudentId]   = useState('');
+  const [dueAt, setDueAt]           = useState(addDays(15));
+  const [loading, setLoading]       = useState(false);
+  const [loadingStudents, setLoadingStudents] = useState(true);
+  const [error, setError]           = useState('');
+
+  useEffect(() => {
+    studentsService.getStudentsByClassroom(book.classroomId).then(data => {
+      setStudents(data);
+      if (data.length > 0) setStudentId(data[0].id);
+      setLoadingStudents(false);
+    }).catch(() => setLoadingStudents(false));
+  }, [book.classroomId]);
+
+  const handleConfirmLoan = async () => {
+    if (!studentId) return;
+    setLoading(true);
+    setError('');
+    try {
+      await booksService.createLoan({
+        qrToken: book.qrToken,
+        studentId,
+        dueAt,
+      });
+      const student = students.find(s => s.id === studentId);
+      onSuccess(`Emprunt confirmé pour ${student?.firstName} ${student?.lastName}`);
+    } catch (err: any) {
+      setError(err.response?.data?.error?.message ?? 'Erreur lors de l\'emprunt');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancelReservation = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      await booksService.cancelReservation(book.qrToken);
+      onSuccess(`Réservation annulée — "${book.title}" est disponible`);
+    } catch (err: any) {
+      setError(err.response?.data?.error?.message ?? 'Erreur lors de l\'annulation');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className={styles.actionPage}>
+      <button className={styles.backBtn} onClick={onBack}>
+        <ArrowLeft size={18} /> Retour
+      </button>
+
+      <div className={`${styles.bookCard} ${styles.bookCardReserved}`}>
+        <div className={styles.bookCardIcon}>
+          <UserCheck size={24} className={styles.iconPurple} />
+        </div>
+        <div className={styles.bookCardInfo}>
+          <p className={styles.bookCardTitle}>{book.title}</p>
+          <p className={styles.bookCardSub}>{book.universe ?? book.publisher ?? '—'}</p>
+          <p className={styles.bookCardToken}>{book.qrToken} · Réservé</p>
+        </div>
+      </div>
+
+      <h2 className={styles.actionTitle}>Livre réservé</h2>
+      <p className={styles.reserveHint}>Ce livre est réservé. Confirmez l'emprunt pour l'élève concerné.</p>
+
+      {error && <div className={styles.errorBox}><AlertTriangle size={16} />{error}</div>}
+
+      <div className={styles.formSection}>
+        <div className={styles.formGroup}>
+          <label className={styles.formLabel}><User size={14} /> Élève</label>
+          {loadingStudents ? (
+            <div className={styles.loadingStudents}>
+              <Loader size={16} className={styles.spin} /> Chargement...
+            </div>
+          ) : (
+            <select
+              value={studentId}
+              onChange={e => setStudentId(e.target.value)}
+              className={styles.formSelect}
+            >
+              {students.map(s => (
+                <option key={s.id} value={s.id}>{s.firstName} {s.lastName}</option>
+              ))}
+            </select>
+          )}
+        </div>
+
+        <div className={styles.formGroup}>
+          <label className={styles.formLabel}>
+            <Calendar size={14} /> Date de retour prévue (J+15 par défaut)
+          </label>
+          <input
+            type="date"
+            value={dueAt}
+            onChange={e => setDueAt(e.target.value)}
+            min={addDays(1)}
+            className={styles.formInput}
+          />
+        </div>
+      </div>
+
+      <button
+        className={`${styles.confirmBtn} ${styles.confirmBtnGreen}`}
+        onClick={handleConfirmLoan}
+        disabled={loading || !studentId}
+      >
+        {loading ? <Loader size={18} className={styles.spin} /> : <CheckCircle size={18} />}
+        {loading ? 'Enregistrement...' : 'Confirmer l\'emprunt'}
+      </button>
+
+      <button
+        className={styles.cancelReservationBtn}
+        onClick={handleCancelReservation}
+        disabled={loading}
+      >
+        <XCircle size={16} /> Annuler la réservation
+      </button>
+    </div>
+  );
+}
+
 // Écran de succès 
 function SuccessScreen({ message, onReset }: { message: string; onReset: () => void }) {
   return (
@@ -498,7 +630,7 @@ function SuccessScreen({ message, onReset }: { message: string; onReset: () => v
 }
 
 // Page principale 
-type Phase = 'scan' | 'emprunt' | 'retour' | 'success';
+type Phase = 'scan' | 'emprunt' | 'retour' | 'reserved' | 'success';
 
 export default function ScanPage() {
   const [phase, setPhase]           = useState<Phase>('scan');
@@ -516,6 +648,8 @@ export default function ScanPage() {
       setBook(foundBook);
       if (foundBook.status === 'AVAILABLE') {
         setPhase('emprunt');
+      } else if (foundBook.status === 'RESERVED') {
+        setPhase('reserved'); 
       } else {
         const activeLoan =
           foundBook.currentLoan ??
@@ -556,6 +690,7 @@ export default function ScanPage() {
       {phase === 'scan'    && <ScanFrame onScan={handleScan} />}
       {phase === 'emprunt' && book && <EmpruntForm book={book} onBack={reset} onSuccess={handleSuccess} />}
       {phase === 'retour'  && book && <RetourForm  book={book} loan={loan} onBack={reset} onSuccess={handleSuccess} />}
+      {phase === 'reserved' && book &&<ReservedForm book={book} onBack={reset} onSuccess={handleSuccess} />}
       {phase === 'success' && <SuccessScreen message={successMsg} onReset={reset} />}
     </div>
   );

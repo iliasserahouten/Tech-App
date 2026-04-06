@@ -24,6 +24,7 @@ export class ReservationController {
     }
   };
 
+
   listByBook = async (req: Request<BookParams>, res: Response, next: NextFunction) => {
     try {
       const teacherId = this.getTeacherId(req);
@@ -45,4 +46,15 @@ export class ReservationController {
       return next(e);
     }
   };
+
+  cancelByQr = async (req: Request<{ qrToken: string }>, res: Response, next: NextFunction) => {
+  try {
+    const teacherId = this.getTeacherId(req);
+    const { qrToken } = req.params;
+    const data = await this.service.cancelByQr(teacherId, qrToken);
+    return res.json({ data });
+  } catch (e) {
+    return next(e);
+  }
+};
 }

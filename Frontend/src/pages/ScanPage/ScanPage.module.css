@@ -360,6 +360,36 @@
 .reserveBtn:active { background: #EEF2FF; }
 .reserveHint { font-size: 0.85rem; color: #6B7280; margin: -6px 0 4px; }
 
+.bookCardReserved {
+  background: #F5F3FF;
+  border: 1px solid #DDD6FE;
+}
+
+.iconPurple { color: #7C3AED; }
+
+.cancelReservationBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 14px;
+  background: white;
+  color: #EF4444;
+  border: 2px solid #FEE2E2;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 12px;
+  transition: all 0.2s;
+}
+
+.cancelReservationBtn:hover {
+  background: #FEF2F2;
+  border-color: #EF4444;
+}
+
 /* Success */
 .successPage {
   display: flex;

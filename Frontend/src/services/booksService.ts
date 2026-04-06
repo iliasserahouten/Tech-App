@@ -22,6 +22,11 @@ export const booksService = {
     return allBooks.flat();
   },
 
+  async cancelReservation(qrToken: string) {
+  const response = await api.delete(`/reservations/by-qr/${qrToken}`);
+  return response.data;
+},
+
   async getBooksByClassroom(classroomId: string): Promise<Book[]> {
     const response = await api.get(`/classrooms/${classroomId}/books`);
     return extractArray<Book>(response);

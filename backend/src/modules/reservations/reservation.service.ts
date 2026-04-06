@@ -66,4 +66,17 @@ export class ReservationService {
     await this.repo.setBookStatus(exists.bookId as string, "AVAILABLE");
     return { deleted: true };
   }
+
+  async cancelByQr(teacherId: string, qrToken: string) {
+  const book = await this.repo.findBookByQrForTeacher(teacherId, qrToken);
+  if (!book) throw new AppError("Book not found", 404);
+
+  const reservation = await this.repo.findExistingReservation(book.id);
+  if (!reservation) throw new AppError("No reservation found for this book", 404);
+
+  await this.repo.deleteById(reservation.id);
+  await this.repo.setBookStatus(book.id, "AVAILABLE");
+
+  return { deleted: true };
+}
 }

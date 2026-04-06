@@ -80,6 +80,12 @@ findByIdForTeacher(teacherId: string, id: string) {
   });
 }
 
+findActiveLoanByBook(bookId: string) {
+  return prisma.loan.findFirst({
+    where: { bookId, status: { in: ["ACTIVE", "LATE"] } },
+  });
+}
+
   deleteById(id: string) {
     return prisma.reservation.delete({ where: { id } });
   }

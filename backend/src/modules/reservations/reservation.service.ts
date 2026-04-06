@@ -39,17 +39,13 @@ export class ReservationService {
     const sameClassroom = book.classroom.id === student.classroom.id;
     if (!sameClassroom) throw new AppError("Student cannot reserve this book (different class)", 403);
 
+    const activeLoan = await this.repo.findActiveLoanByBook(book.id);
+    if (activeLoan && activeLoan.studentId === student.id) { throw new AppError("Cet élève a déjà emprunté ce livre", 409);}
     const desiredFrom = dto.desiredFrom ? new Date(dto.desiredFrom) : null;
-    if (dto.desiredFrom && isNaN(desiredFrom!.getTime())) {
-      throw new AppError("desiredFrom must be a valid ISO date", 400);
-    }
+    
+    if (dto.desiredFrom && isNaN(desiredFrom!.getTime())) { throw new AppError("desiredFrom must be a valid ISO date", 400);}
 
-    const created = await this.repo.createReservation({
-      teacherId,
-      bookId: book.id,
-      studentId: student.id,
-      desiredFrom,
-    });
+    const created = await this.repo.createReservation({ teacherId, bookId: book.id, studentId: student.id, desiredFrom, });
 
     return toDto(created);
   }

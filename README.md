@@ -1,167 +1,280 @@
-# 📚 Tech-App – Gestion des emprunts de livres scolaires
+# 📚 Tech-App – School Library Management System
+
+> Application web full-stack de gestion des emprunts de livres scolaires, déployée sur AWS.
+
+[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript)](https://www.typescriptlang.org)
+[![Node.js](https://img.shields.io/badge/Node.js-20-339933?logo=node.js)](https://nodejs.org)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18-4169E1?logo=postgresql)](https://www.postgresql.org)
+[![AWS](https://img.shields.io/badge/AWS-Deployed-FF9900?logo=amazonaws)](https://aws.amazon.com)
+[![Docker](https://img.shields.io/badge/Docker-Containerized-2496ED?logo=docker)](https://www.docker.com)
+
+---
 
 ## 🧠 Contexte du projet
 
-Ce projet technique a pour objectif de **dématérialiser la gestion des emprunts et des restitutions de livres** dans les classes d’écoles.
+**Tech-App** est une application web full-stack conçue pour simplifier et automatiser la gestion des emprunts, retours et réservations de livres scolaires.
 
-Aujourd’hui, ces processus sont souvent réalisés manuellement, ce qui engendre une perte de temps pour les enseignants. L’application **Tech-App** vise à simplifier, automatiser et fiabiliser cette gestion grâce à une solution web moderne.
+Dans de nombreuses classes, le suivi des livres est encore réalisé manuellement, ce qui entraîne une perte de temps, des oublis, des erreurs de suivi et une difficulté à connaître rapidement l'état des ressources disponibles.
 
----
-
-## 🎯 Objectifs principaux
-
-* Réduire le temps consacré à la gestion des livres
-* Centraliser les informations (écoles, classes, élèves, livres)
-* Faciliter les emprunts et retours via QR Code
-* Offrir une vue claire de l’état des livres (disponibles / empruntés)
+L'objectif de ce projet est de proposer une solution numérique simple, moderne et centralisée pour aider les enseignants à gérer efficacement les livres, les élèves, les classes et les emprunts.
 
 ---
 
-## 🏗️ Architecture globale (Frontend / Backend / Database)
-![archi](images/architecture.png)
+## 🎯 Objectifs
+
+- Réduire le temps consacré à la gestion manuelle des livres
+- Centraliser les données liées aux écoles, classes, élèves et livres
+- Faciliter les emprunts et retours grâce à l'utilisation de **QR Codes**
+- Suivre en temps réel le statut des livres : disponibles, empruntés, réservés ou en retard
+- Offrir une interface **responsive et PWA**, accessible depuis ordinateur ou smartphone
+- Proposer un historique des emprunts avec filtres avancés
 
 ---
 
 ## 👤 Utilisateurs cibles
 
-* Enseignants
-* Intervenants dans une ou plusieurs écoles
-* Enseignants ayant plusieurs classes selon les jours
+- Enseignants gérant des classes de livres scolaires
+- Intervenants travaillant dans plusieurs écoles
+- Enseignants ayant plusieurs classes selon les jours de la semaine
+- Responsables pédagogiques souhaitant centraliser le suivi des livres
 
 ---
 
-## ⚙️ Fonctionnalités
+## 🏗️ Architecture générale
+
+![Architecture générale du projet](images/architecture.png)
+
+### Flux global
+
+```
+Utilisateur (Navigateur)
+        ↓
+Amazon CloudFront (CDN + HTTPS)
+        ↓
+Amazon S3 (Frontend React statique)
+        ↓
+Application Load Balancer (AWS)
+        ↓
+Amazon ECS Fargate (Container Docker)
+        ↓
+Backend Node.js / Express / TypeScript
+        ↓
+Prisma ORM
+        ↓
+Amazon RDS PostgreSQL
+```
+
+---
+
+## ⚙️ Fonctionnalités principales
 
 ### 🏫 Gestion du référentiel scolaire
+- Création et gestion des écoles et classes
+- Association des classes aux jours de la semaine
+- Sélection automatique de la classe du jour selon le planning de l'enseignant
 
-* Création et gestion d’écoles
-* Association d’une ou plusieurs classes à une école
-* Association des classes à des jours de la semaine
-* Gestion des élèves par classe (nom, prénom)
-* Sélection automatique de la classe par défaut selon le jour
-
----
+### 👨‍🎓 Gestion des élèves
+- Ajout, consultation et recherche d'élèves par classe
+- Filtrage des données selon la classe sélectionnée
 
 ### 📘 Gestion des livres
-
-* Création de fiches livres :
-
-  * Titre
-  * Univers
-  * Éditeur
-* Association d’un livre à une classe
-* Génération d’un **QRCode unique** par livre
-* Export PDF pour impression des QR Codes
-
----
+- Création de fiches livres (titre, univers, éditeur, classe)
+- Génération d'un **QR Code unique** par livre
+- Suivi du statut : disponible / emprunté / réservé
+- Export PDF pour impression des QR Codes
 
 ### 🔁 Gestion des emprunts et retours
+- Emprunt via scan ou saisie du QR Code
+- Définition d'une date de retour prévue
+- Vérification automatique de la disponibilité
+- Mise à jour automatique du statut après retour
+- Détection des emprunts en retard
 
-* Emprunt via scan du QR Code depuis un smartphone
-* Sélection de l’élève emprunteur
-* Définition d’une date de retour
-* Notification en cas de retard
-* Retour automatique via scan du QR Code
-* Historique des emprunts par livre
-* Réservation anticipée d’un livre déjà emprunté
+### 📌 Gestion des réservations
+- Réservation d'un livre déjà emprunté
+- Annulation et suivi des réservations
 
----
-
-### 📊 Suivi et consultation
-
-* Vue globale des livres
-* Statut : disponible / emprunté
-* Filtres :
-
-  * Par école
-  * Par classe
-  * Par élève
+### 📊 Tableau de bord
+- Nombre de livres disponibles / empruntés / en retard
+- Nombre d'élèves, activités récentes, statistiques d'emprunts
 
 ---
 
 ## 🛠️ Stack technique
 
 ### Frontend
-
-* React
-* Vite
-* TypeScript
+| Technologie | Usage |
+|---|---|
+| React 19 | Framework UI |
+| TypeScript | Typage statique |
+| Vite | Build tool |
+| Tailwind CSS | Styling |
+| Axios | Requêtes HTTP |
+| React Router | Navigation |
+| Zustand | State management |
+| PWA | Application installable |
 
 ### Backend
-
-* Node.js
-* Express
-* TypeScript
+| Technologie | Usage |
+|---|---|
+| Node.js 20 | Runtime |
+| Express 5 | Framework HTTP |
+| TypeScript | Typage statique |
+| Prisma ORM 7 | Accès base de données |
+| JWT | Authentification |
+| bcrypt | Hashage des mots de passe |
+| QRCode | Génération QR Codes |
+| PDFKit | Export PDF |
 
 ### Base de données
+| Technologie | Usage |
+|---|---|
+| PostgreSQL 18 | Base de données relationnelle |
+| Amazon RDS | Hébergement managé |
+| Prisma Migrations | Versioning du schéma |
 
-* SQL (PostgreSQL)
-
-### Autres outils
-
-* Git & GitHub
-* QR Code generator
-* PDF generation
+### Cloud & DevOps
+| Service | Usage |
+|---|---|
+| Amazon S3 | Hébergement frontend statique |
+| Amazon CloudFront | CDN + HTTPS |
+| Application Load Balancer | Routage du trafic API |
+| Amazon ECS Fargate | Orchestration containers |
+| Amazon ECR | Registry Docker |
+| Amazon RDS PostgreSQL | Base de données managée |
+| Amazon CloudWatch | Logs et monitoring |
+| AWS Secrets Manager | Gestion des secrets |
+| Docker | Conteneurisation |
 
 ---
 
-## 📂 Architecture du projet
+## 📂 Structure du projet
 
-```text
+```
 Tech-App/
- ├─ Backend/
- │   ├─ src/
- │   │   ├─ app.ts
- │   │   ├─ server.ts
- │   │   ├─ routes/
- │   │   ├─ controllers/
- │   │   ├─ services/
- │   │   └─ models/
- │   └─ package.json
- │
- ├─ frontend/
- │   ├─ src/
- │   ├─ public/
- │   └─ package.json
- │
- └─ README.md
+│
+├── Frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   ├── services/
+│   │   ├── types/
+│   │   ├── lib/
+│   │   └── App.tsx
+│   ├── public/
+│   ├── package.json
+│   ├── vite.config.ts
+│   └── tsconfig.json
+│
+├── backend/
+│   ├── prisma/
+│   │   ├── schema.prisma
+│   │   ├── prisma.config.ts
+│   │   └── migrations/
+│   ├── src/
+│   │   ├── app.ts
+│   │   ├── modules/
+│   │   │   ├── auth/
+│   │   │   ├── books/
+│   │   │   ├── classrooms/
+│   │   │   ├── loans/
+│   │   │   ├── reservations/
+│   │   │   ├── schools/
+│   │   │   ├── students/
+│   │   │   └── stats/
+│   │   └── middlewares/
+│   ├── Dockerfile
+│   └── package.json
+│
+├── images/
+│   └── architecture.png
+│
+└── README.md
 ```
 
 ---
 
-## 🗺️ Feuille de route (Roadmap)
+## 🔐 Authentification
 
-### Phase 1 – Conception
+L'application utilise une authentification basée sur **JWT** :
 
-*
-
-### Phase 2 – Mise en place technique
-
-*
-
-### Phase 3 – Fonctionnalités cœur
-
-*
-
-### Phase 4 – Emprunts & retours
-
-*
-
-### Phase 5 – Finalisation
-
-*
+- Inscription et connexion sécurisée
+- Protection des routes backend via middleware
+- Association des données à l'enseignant connecté
+- Gestion des accès selon l'utilisateur authentifié
 
 ---
 
-## 🚀 Déploiement
+## 🧩 Modèle de données
 
-L’application sera déployée sur un hébergement gratuit afin de fournir un projet complet et accessible.
+```
+User ──── School ──── Classroom ──── Student
+                           │
+                          Book ──── Loan
+                           │
+                           └──── Reservation
+                           
+ClassSchedule ──── User + Classroom
+```
+
+---
+
+## 🚀 Déploiement AWS
+
+### Frontend
+1. Build avec Vite (`npm run build`)
+2. Upload des fichiers statiques sur **Amazon S3**
+3. Distribution mondiale via **Amazon CloudFront**
+
+### Backend
+1. Conteneurisation avec **Docker**
+2. Push de l'image vers **Amazon ECR**
+3. Déploiement sur **Amazon ECS Fargate**
+4. Exposition via **Application Load Balancer**
+
+### Base de données
+1. **Amazon RDS PostgreSQL** (Multi-AZ recommandé en production)
+2. Migrations gérées avec **Prisma**
+3. Secrets stockés dans **AWS Secrets Manager**
+
+---
+
+## 🗺️ Roadmap
+
+- [x] Phase 1 – Conception et analyse du besoin
+- [x] Phase 2 – Mise en place technique (React, Express, Prisma)
+- [x] Phase 3 – Fonctionnalités cœur (écoles, classes, élèves, livres)
+- [x] Phase 4 – Emprunts, retours, réservations, QR Codes
+- [x] Phase 5 – Déploiement AWS complet
+- [ ] Notifications automatiques par email
+- [ ] Export Excel des emprunts
+- [ ] Gestion multi-rôles (admin, enseignant, intervenant)
+- [ ] Application mobile
+- [ ] Statistiques avancées par classe ou période
+
+---
+
+## 📌 Ce que ce projet m'a appris
+
+Ce projet m'a permis de travailler sur un cycle complet de développement logiciel :
+
+- Analyse du besoin et conception de la base de données
+- Développement frontend React avec TypeScript
+- Développement backend Node.js avec architecture modulaire
+- Authentification JWT et gestion des erreurs
+- Intégration avec Prisma ORM
+- Conteneurisation Docker
+- Déploiement cloud complet sur AWS
+- Mise en production d'une application full-stack
 
 ---
 
 ## 📬 Contact
 
-Pour toute question ou difficulté rencontrée au cours du développement, un point d’avancement pourra être organisé.
+Projet réalisé dans un cadre pédagogique et technique.
+
+Pour toute question ou suggestion, vous pouvez me contacter via **GitHub** ou **LinkedIn**.
 
 ---
 

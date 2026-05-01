@@ -43,7 +43,7 @@ L'objectif de ce projet est de proposer une solution numérique simple, moderne 
 
 ## 🏗️ Architecture générale
 
-![Architecture générale du projet](images/architecture.png)
+![Architecture générale du projet](images/Arch.png)
 
 ### Flux global
 
